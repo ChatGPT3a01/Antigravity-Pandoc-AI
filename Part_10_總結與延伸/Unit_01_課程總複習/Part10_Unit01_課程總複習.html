@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 10 Unit 01 - 課程總複習</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .slide-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .slide {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 60px;
+            min-height: 80vh;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00, #ff6347);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            color: #ffd700;
+        }
+
+        h3 {
+            font-size: 1.6em;
+            margin: 20px 0 15px 0;
+            color: #ff8c00;
+        }
+
+        p, li {
+            font-size: 1.4em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 140, 0, 0.15));
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #ffd700;
+        }
+
+        .tip-box {
+            background: rgba(46, 204, 113, 0.15);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #2ecc71;
+        }
+
+        .part-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px 0;
+            border-left: 4px solid #ffd700;
+            transition: transform 0.3s ease;
+        }
+
+        .part-card:hover {
+            transform: translateX(10px);
+        }
+
+        .part-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1a2e;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .skill-item {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        .nav-btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .nav-btn.prev {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+        }
+
+        .nav-btn.next {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1a2e;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .slide-number {
+            text-align: center;
+            font-size: 1.1em;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .achievement {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2));
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+            border: 2px solid #ffd700;
+        }
+
+        .achievement-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .quiz-option {
+            display: block;
+            width: 100%;
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #e0e0e0;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+        }
+
+        .quiz-option.correct {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: #2ecc71;
+        }
+
+        .quiz-option.wrong {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+        }
+
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(255, 215, 0, 0.3);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            border-left: 3px solid #ffd700;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 15px 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -36px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: #ffd700;
+            border-radius: 50%;
+        }
+
+        /* 頂部導航列 */
+        .nav-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(255, 215, 0, 0.95); backdrop-filter: blur(12px); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .nav-bar .nav-title { font-size: 20px; font-weight: 700; color: #333; }
+        .nav-bar .nav-buttons { display: flex; gap: 12px; }
+        .nav-bar .nav-link { background: rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.2); color: #333; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.3s; }
+        .nav-bar .nav-link:hover { background: rgba(0,0,0,0.2); transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-title">Part 10 Unit 01 - 課程總複習</div>
+        <div class="nav-buttons">
+            <button class="nav-link" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-link" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-link">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-link">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container" style="margin-top: 70px;">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <h1>Part 10 Unit 01</h1>
+            <h2>課程總複習</h2>
+            <p>回顧你的學習旅程</p>
+            <br><br>
+            <div class="achievement">
+                <div class="achievement-icon">🎉</div>
+                <h3>恭喜你來到最後一個 Part！</h3>
+                <p>讓我們一起回顧所學的內容</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: 學習旅程回顧 -->
+        <div class="slide">
+            <h2>學習旅程回顧</h2>
+            <br>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h3>Part 01-02：認識工具</h3>
+                    <p>Antigravity + Pandoc 的基礎概念</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>Part 03-04：基礎應用</h3>
+                    <p>安裝設定、基本轉換、批次處理</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>Part 05-06：進階技巧</h3>
+                    <p>格式控制、AI 輔助處理</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>Part 07-08：實戰應用</h3>
+                    <p>專案實作、效能優化</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>Part 09-10：疑難與總結</h3>
+                    <p>問題排解、持續學習</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Part 01-02 回顧 -->
+        <div class="slide">
+            <h2>Part 01-02 回顧</h2>
+            <br>
+            <div class="part-card">
+                <span class="part-number">Part 01</span>
+                <strong>課程簡介與環境準備</strong>
+                <ul>
+                    <li>了解課程目標和學習路徑</li>
+                    <li>認識 AI 輔助文件處理的概念</li>
+                </ul>
+            </div>
+            <div class="part-card">
+                <span class="part-number">Part 02</span>
+                <strong>認識 Antigravity 與 Pandoc</strong>
+                <ul>
+                    <li>Antigravity：AI 驅動的開發環境</li>
+                    <li>Pandoc：萬用格式轉換工具</li>
+                    <li>兩者結合的強大威力</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 4: Part 03-04 回顧 -->
+        <div class="slide">
+            <h2>Part 03-04 回顧</h2>
+            <br>
+            <div class="part-card">
+                <span class="part-number">Part 03</span>
+                <strong>Pandoc 安裝與基礎轉換</strong>
+                <ul>
+                    <li>安裝 Pandoc 並設定環境</li>
+                    <li>基本轉換指令</li>
+                    <li>認識 Markdown 語法</li>
+                </ul>
+            </div>
+            <div class="part-card">
+                <span class="part-number">Part 04</span>
+                <strong>批次轉換與自動化</strong>
+                <ul>
+                    <li>批次處理多個檔案</li>
+                    <li>PowerShell 腳本基礎</li>
+                    <li>AI 輔助產生腳本</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 5: Part 05-06 回顧 -->
+        <div class="slide">
+            <h2>Part 05-06 回顧</h2>
+            <br>
+            <div class="part-card">
+                <span class="part-number">Part 05</span>
+                <strong>進階格式轉換</strong>
+                <ul>
+                    <li>HTML 轉換與自訂樣式</li>
+                    <li>PDF 輸出設定</li>
+                    <li>自訂模板應用</li>
+                </ul>
+            </div>
+            <div class="part-card">
+                <span class="part-number">Part 06</span>
+                <strong>AI 輔助文件處理</strong>
+                <ul>
+                    <li>AI 整理文件結構</li>
+                    <li>AI 生成摘要</li>
+                    <li>AI 校正與潤飾</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 6: Part 07-08 回顧 -->
+        <div class="slide">
+            <h2>Part 07-08 回顧</h2>
+            <br>
+            <div class="part-card">
+                <span class="part-number">Part 07</span>
+                <strong>實戰專案</strong>
+                <ul>
+                    <li>會議記錄自動化</li>
+                    <li>技術文件產生器</li>
+                    <li>批次報告製作</li>
+                </ul>
+            </div>
+            <div class="part-card">
+                <span class="part-number">Part 08</span>
+                <strong>進階技巧與優化</strong>
+                <ul>
+                    <li>效能優化技巧</li>
+                    <li>錯誤處理與除錯</li>
+                    <li>工作流程整合</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 7: Part 09 回顧 -->
+        <div class="slide">
+            <h2>Part 09 回顧</h2>
+            <br>
+            <div class="part-card">
+                <span class="part-number">Part 09</span>
+                <strong>疑難排解</strong>
+                <ul>
+                    <li>常見問題診斷流程</li>
+                    <li>環境設定問題解決</li>
+                    <li>善用 AI 協助除錯</li>
+                </ul>
+            </div>
+            <br>
+            <div class="tip-box">
+                <h3>關鍵技能</h3>
+                <p>學會閱讀錯誤訊息、系統性排查問題、向 AI 有效提問</p>
+            </div>
+        </div>
+
+        <!-- Slide 8: 核心技能總覽 -->
+        <div class="slide">
+            <h2>核心技能總覽</h2>
+            <br>
+            <div class="skill-grid">
+                <div class="skill-item">
+                    <h3>Pandoc 指令</h3>
+                    <p>格式轉換</p>
+                </div>
+                <div class="skill-item">
+                    <h3>Markdown</h3>
+                    <p>文件撰寫</p>
+                </div>
+                <div class="skill-item">
+                    <h3>PowerShell</h3>
+                    <p>腳本自動化</p>
+                </div>
+                <div class="skill-item">
+                    <h3>YAML</h3>
+                    <p>元資料設定</p>
+                </div>
+                <div class="skill-item">
+                    <h3>AI 提示詞</h3>
+                    <p>有效溝通</p>
+                </div>
+                <div class="skill-item">
+                    <h3>問題診斷</h3>
+                    <p>除錯能力</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: 關鍵指令複習 -->
+        <div class="slide">
+            <h2>關鍵指令複習</h2>
+            <br>
+            <div class="highlight">
+                <h3>基本轉換</h3>
+                <p><code>pandoc input.md -o output.docx</code></p>
+            </div>
+            <div class="highlight">
+                <h3>指定格式</h3>
+                <p><code>pandoc input.md -f markdown -t html -o output.html</code></p>
+            </div>
+            <div class="highlight">
+                <h3>使用模板</h3>
+                <p><code>pandoc input.md -o output.docx --reference-doc=template.docx</code></p>
+            </div>
+            <div class="highlight">
+                <h3>獨立 HTML</h3>
+                <p><code>pandoc input.md -o output.html --standalone --self-contained</code></p>
+            </div>
+        </div>
+
+        <!-- Slide 10: 批次處理複習 -->
+        <div class="slide">
+            <h2>批次處理複習</h2>
+            <br>
+            <div class="highlight">
+                <h3>轉換資料夾中所有 .md</h3>
+                <pre style="background: #0d1117; padding: 15px; border-radius: 8px; overflow-x: auto;"><code style="color: #e6e6e6;">Get-ChildItem *.md | ForEach-Object {
+    $output = $_.BaseName + ".docx"
+    pandoc $_.FullName -o $output
+}</code></pre>
+            </div>
+            <br>
+            <div class="highlight">
+                <h3>平行處理（PowerShell 7+）</h3>
+                <pre style="background: #0d1117; padding: 15px; border-radius: 8px; overflow-x: auto;"><code style="color: #e6e6e6;">Get-ChildItem *.md | ForEach-Object -Parallel {
+    pandoc $_.FullName -o ($_.BaseName + ".docx")
+} -ThrottleLimit 4</code></pre>
+            </div>
+        </div>
+
+        <!-- Slide 11: AI 提示詞複習 -->
+        <div class="slide">
+            <h2>AI 提示詞複習</h2>
+            <br>
+            <div class="highlight">
+                <h3>整理文件結構</h3>
+                <p>「請幫我整理這份文件的結構，加上適當的標題和段落分隔」</p>
+            </div>
+            <div class="highlight">
+                <h3>生成摘要</h3>
+                <p>「請幫我生成這份文件的重點摘要，不超過 200 字」</p>
+            </div>
+            <div class="highlight">
+                <h3>校正潤飾</h3>
+                <p>「請幫我校正這份文件的錯字，並潤飾語句使其更通順」</p>
+            </div>
+            <div class="highlight">
+                <h3>產生腳本</h3>
+                <p>「請幫我寫一個 PowerShell 腳本，可以批次轉換 .md 到 .docx」</p>
+            </div>
+        </div>
+
+        <!-- Slide 12: 錯誤處理複習 -->
+        <div class="slide">
+            <h2>錯誤處理複習</h2>
+            <br>
+            <div class="highlight">
+                <h3>Try-Catch 基本結構</h3>
+                <pre style="background: #0d1117; padding: 15px; border-radius: 8px; overflow-x: auto;"><code style="color: #e6e6e6;">try {
+    pandoc $input -o $output
+} catch {
+    Write-Host "錯誤: $_" -ForegroundColor Red
+}</code></pre>
+            </div>
+            <br>
+            <div class="highlight">
+                <h3>常見錯誤速記</h3>
+                <ul>
+                    <li><code>does not exist</code> → 檢查檔案路徑</li>
+                    <li><code>YAML header</code> → 檢查 YAML 格式</li>
+                    <li><code>byte sequence</code> → 轉換為 UTF-8</li>
+                    <li><code>pdflatex</code> → 安裝 LaTeX</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 13: 你獲得的能力 -->
+        <div class="slide">
+            <h2>你獲得的能力</h2>
+            <br>
+            <div class="achievement">
+                <div class="achievement-icon">🏆</div>
+                <h3>恭喜你！你現在可以：</h3>
+            </div>
+            <br>
+            <ul>
+                <li>✓ 將 Markdown 轉換成各種格式</li>
+                <li>✓ 批次處理大量文件</li>
+                <li>✓ 建立自動化腳本</li>
+                <li>✓ 用 AI 輔助文件處理</li>
+                <li>✓ 自訂模板和樣式</li>
+                <li>✓ 診斷和解決問題</li>
+                <li>✓ 設計完整的工作流程</li>
+            </ul>
+        </div>
+
+        <!-- Slide 14: 小測驗 -->
+        <div class="slide">
+            <h2>總複習小測驗</h2>
+            <br>
+            <p><strong>Pandoc 的主要功能是什麼？</strong></p>
+            <br>
+            <button class="quiz-option" onclick="checkAnswer(this, false)">A. 程式碼編譯</button>
+            <button class="quiz-option" onclick="checkAnswer(this, true)">B. 文件格式轉換</button>
+            <button class="quiz-option" onclick="checkAnswer(this, false)">C. 影片編輯</button>
+            <button class="quiz-option" onclick="checkAnswer(this, false)">D. 網頁開發</button>
+            <br>
+            <div id="quiz-result" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- Slide 15: 複習建議 -->
+        <div class="slide">
+            <h2>複習建議</h2>
+            <br>
+            <div class="tip-box">
+                <h3>如何保持技能</h3>
+                <ul>
+                    <li><strong>實際應用</strong> - 在日常工作中使用所學</li>
+                    <li><strong>定期練習</strong> - 每週嘗試一個新技巧</li>
+                    <li><strong>查閱速查表</strong> - 隨時複習關鍵指令</li>
+                    <li><strong>記錄心得</strong> - 建立個人知識庫</li>
+                    <li><strong>持續探索</strong> - 嘗試新的應用場景</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 16: 總結 -->
+        <div class="slide">
+            <h2>本單元總結</h2>
+            <br>
+            <div class="highlight">
+                <h3>你已經完成了</h3>
+                <ul>
+                    <li>10 個 Part 的完整學習</li>
+                    <li>從基礎到進階的技能提升</li>
+                    <li>多個實戰專案的練習</li>
+                    <li>建立了完整的知識體系</li>
+                </ul>
+            </div>
+            <br>
+            <div class="tip-box">
+                <p><strong>下一步：</strong>在 Unit 02 學習更多進階學習資源</p>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button class="nav-btn prev" onclick="prevSlide()">← 上一頁</button>
+            <button class="nav-btn next" onclick="nextSlide()">下一頁 →</button>
+        </div>
+        <div class="slide-number" id="slideNumber"></div>
+    </div>
+
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">全螢幕</button>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            updateProgress();
+        }
+
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function prevSlide() { showSlide(currentSlide - 1); }
+
+        function updateProgress() {
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+            document.getElementById('slideNumber').textContent = `${currentSlide + 1} / ${totalSlides}`;
+        }
+
+        function checkAnswer(btn, isCorrect) {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(opt => { opt.disabled = true; opt.classList.remove('correct', 'wrong'); });
+            if (isCorrect) {
+                btn.classList.add('correct');
+                document.getElementById('quiz-result').innerHTML = '<p style="color: #2ecc71; font-size: 1.3em;">✓ 正確！Pandoc 是強大的文件格式轉換工具</p>';
+            } else {
+                btn.classList.add('wrong');
+                document.getElementById('quiz-result').innerHTML = '<p style="color: #e74c3c; font-size: 1.3em;">✗ 再想想，答案是 B</p>';
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); }
+            else { document.exitFullscreen(); }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'f') toggleFullscreen();
+        });
+
+        updateProgress();
+    </script>
+</body>
+</html>

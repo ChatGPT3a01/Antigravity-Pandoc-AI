@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 02 Unit 02 - 首次啟動與介面導覽</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; overflow: hidden; color: #333; }
+        .nav-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.2); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; z-index: 10000; }
+        .nav-title { font-size: 22px; font-weight: 700; color: #fff; }
+        .nav-buttons { display: flex; gap: 12px; }
+        .nav-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.4); transform: translateY(-2px); }
+        .nav-arrow { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.25); color: white; width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); font-size: 24px; cursor: pointer; z-index: 9000; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
+        .nav-arrow:hover { background: rgba(255,255,255,0.5); transform: translateY(-50%) scale(1.1); }
+        .prev-arrow { left: 30px; } .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .slide-container { width: 100%; height: 100vh; padding-top: 60px; position: relative; z-index: 1; }
+        .slide { position: absolute; top: 60px; left: 0; width: 100%; height: calc(100vh - 60px); display: none; align-items: center; justify-content: center; padding: 40px; opacity: 0; transition: opacity 0.4s; z-index: 10; }
+        .slide.active { display: flex; opacity: 1; z-index: 20; }
+        .content-card { background: rgba(255,255,255,0.98); border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); padding: 60px; max-width: 1400px; width: 95%; max-height: 88vh; overflow-y: auto; }
+        .slide.locked .content-card { filter: blur(8px); pointer-events: none; }
+        .unlock-overlay-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; z-index: 50; }
+        .slide.locked .unlock-overlay-container { display: flex; }
+        .unlock-btn { background: rgba(30,60,114,0.95); color: white; border: 2px solid white; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; pointer-events: auto; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 20000; }
+        .modal-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; }
+        .modal-input { width: 100%; padding: 15px; font-size: 20px; border: 2px solid #e0e0e0; border-radius: 12px; margin: 20px 0; text-align: center; outline: none; }
+        .modal-input:focus { border-color: #1e3c72; }
+        .modal-btn { background: #1e3c72; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-size: 18px; cursor: pointer; margin: 5px; }
+        h1 { color: #1e3c72; font-size: 56px; margin-bottom: 24px; text-align: center; }
+        h2 { color: #2a5298; font-size: 38px; margin-bottom: 35px; border-bottom: 3px solid #1e3c72; padding-bottom: 12px; }
+        h3 { color: #1e3c72; font-size: 26px; margin: 30px 0 15px 0; }
+        p, li { font-size: 20px; line-height: 1.8; color: #444; margin-bottom: 15px; }
+        code { background: #f0f2f5; padding: 3px 8px; border-radius: 6px; font-family: 'Consolas', monospace; color: #d63384; font-weight: 600; }
+        pre { background: #282c34; color: #abb2bf; padding: 25px; border-radius: 12px; margin: 25px 0; font-size: 18px; line-height: 1.6; }
+        .box { padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 6px solid; font-size: 20px; }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .highlight { background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #004d40; }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 30px; }
+        .concept-card { background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px solid #e9ecef; transition: transform 0.3s; }
+        .concept-card:hover { transform: translateY(-8px); border-color: #4facfe; }
+        .quiz-container { background: linear-gradient(145deg, #fff, #f0f4f8); border: 2px solid #1e3c72; border-radius: 20px; padding: 40px; margin: 30px 0; }
+        .quiz-btn { background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .indicators { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 4000; padding: 10px 25px; background: rgba(0,0,0,0.3); border-radius: 30px; }
+        .dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
+        .dot.active { background: #4facfe; transform: scale(1.3); }
+        .step-box { background: #f8f9fa; border-radius: 15px; padding: 25px; margin: 20px 0; border-left: 5px solid #4facfe; }
+        .step-number { display: inline-block; background: #1e3c72; color: white; width: 40px; height: 40px; border-radius: 50%; text-align: center; line-height: 40px; font-weight: bold; margin-right: 15px; }
+        .feature-icon { font-size: 48px; margin-bottom: 15px; }
+        .screenshot-placeholder { background: linear-gradient(145deg, #e0e0e0, #f5f5f5); border: 2px dashed #999; border-radius: 15px; padding: 40px; text-align: center; color: #666; font-size: 18px; margin: 20px 0; }
+        .interface-diagram { display: grid; grid-template-columns: 60px 1fr 350px; grid-template-rows: 1fr 200px; gap: 10px; height: 400px; margin: 20px 0; }
+        .ui-section { background: #f0f4f8; border: 2px solid #1e3c72; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #1e3c72; }
+        .sidebar { grid-row: span 2; }
+        .editor { }
+        .ai-panel { grid-row: span 2; background: #e8f5e9; border-color: #4caf50; color: #2e7d32; }
+        .terminal { grid-column: span 1; }
+        .kbd { display: inline-block; background: #eee; border: 1px solid #ccc; border-radius: 4px; padding: 2px 8px; font-family: monospace; font-size: 16px; box-shadow: 0 2px 0 #999; margin: 0 2px; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <div class="nav-title">Part 02 Unit 02 - 首次啟動與介面導覽</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-btn" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-btn">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-btn">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container">
+
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <div class="content-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h4 style="color: #4facfe; letter-spacing: 2px; margin-bottom: 10px;">Part 02 - 環境安裝與設定</h4>
+                <h1>Unit 02: 介面導覽</h1>
+                <h2 style="border: none; font-weight: normal; font-size: 28px; color: #666;">
+                    認識 Antigravity 的每一個角落
+                </h2>
+                <div style="margin-top: 40px; display: flex; gap: 20px;">
+                    <span class="highlight">側邊欄</span>
+                    <span class="highlight">編輯區</span>
+                    <span class="highlight">AI 面板</span>
+                    <span class="highlight">終端機</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: 學習目標 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>本單元學習目標</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">1️⃣</div>
+                        <h3>認識介面佈局</h3>
+                        <p>了解各區域的位置和功能</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">2️⃣</div>
+                        <h3>掌握快捷鍵</h3>
+                        <p>學會最常用的鍵盤快捷鍵</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">3️⃣</div>
+                        <h3>開啟專案</h3>
+                        <p>學會開啟和管理專案資料夾</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">4️⃣</div>
+                        <h3>使用 AI 面板</h3>
+                        <p>找到並開啟 AI 對話功能</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 介面總覽 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Antigravity 介面總覽</h2>
+                <div class="interface-diagram">
+                    <div class="ui-section sidebar">📁<br>側邊欄</div>
+                    <div class="ui-section editor">📝 編輯區<br>(程式碼在這裡)</div>
+                    <div class="ui-section ai-panel">🤖 AI 面板<br>(Agent 對話)</div>
+                    <div class="ui-section terminal">⌨️ 終端機 / 輸出面板</div>
+                </div>
+                <div class="box info">
+                    <strong>重點：</strong>介面分為四大區域，跟 VS Code 幾乎一樣！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: 側邊欄介紹 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>區域 1：側邊欄 (Activity Bar)</h2>
+                <p>最左邊的圖示列，用來切換不同功能面板：</p>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">📁</div>
+                        <h3>檔案總管</h3>
+                        <p>瀏覽專案中的所有檔案和資料夾</p>
+                        <p><span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">E</span></p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🔍</div>
+                        <h3>搜尋</h3>
+                        <p>在整個專案中搜尋文字</p>
+                        <p><span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">F</span></p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🌿</div>
+                        <h3>版本控制</h3>
+                        <p>Git 版本控制操作</p>
+                        <p><span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">G</span></p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🧩</div>
+                        <h3>擴充功能</h3>
+                        <p>安裝和管理擴充套件</p>
+                        <p><span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">X</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 檔案總管詳細 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>檔案總管詳細操作</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span><strong>開啟資料夾</strong>：點擊「Open Folder」或按 <span class="kbd">Ctrl</span>+<span class="kbd">K</span> <span class="kbd">Ctrl</span>+<span class="kbd">O</span></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span><strong>新增檔案</strong>：在資料夾上右鍵 → New File</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span><strong>新增資料夾</strong>：在資料夾上右鍵 → New Folder</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span><strong>重新命名</strong>：選取檔案後按 <span class="kbd">F2</span></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">5</span><strong>刪除檔案</strong>：選取檔案後按 <span class="kbd">Delete</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: 編輯區介紹 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>區域 2：編輯區 (Editor)</h2>
+                <p>中間最大的區域，用來編輯程式碼和檔案：</p>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h3>📑 分頁標籤</h3>
+                        <p>可同時開啟多個檔案，用分頁切換</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>📏 行號</h3>
+                        <p>左側顯示行號，方便定位</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>🎨 語法高亮</h3>
+                        <p>自動為程式碼上色，提高可讀性</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3">🗺️ 迷你地圖</h3>
+                        <p>右側顯示整個檔案的縮略圖</p>
+                    </div>
+                </div>
+                <div class="box info">
+                    <strong>提示：</strong>按住 <span class="kbd">Ctrl</span> 點擊檔案可以在新分頁開啟！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: 分割編輯器 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>編輯區：分割視窗</h2>
+                <p>可以同時顯示多個檔案並排比較：</p>
+                <div class="step-box">
+                    <p><span class="step-number">1</span><strong>水平分割</strong>：<span class="kbd">Ctrl</span>+<span class="kbd">\</span> 或拖曳分頁到右邊</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span><strong>垂直分割</strong>：右鍵分頁 → Split Down</p>
+                </div>
+                <div class="screenshot-placeholder">
+                    [ 分割視窗示意圖 ]<br><br>
+                    ┌─────────┬─────────┐<br>
+                    │ file1.md │ file2.md │<br>
+                    │          │          │<br>
+                    └─────────┴─────────┘
+                </div>
+                <div class="box success">
+                    <strong>使用場景：</strong>一邊看範例，一邊寫程式碼！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: AI 面板介紹 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>區域 3：AI 面板 (最重要！)</h2>
+                <p>Antigravity 獨有的 AI 代理對話區域：</p>
+                <div class="step-box">
+                    <p><strong>開啟方式：</strong></p>
+                    <ul>
+                        <li>點擊右側的 🤖 圖示</li>
+                        <li>或按 <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">A</span></li>
+                    </ul>
+                </div>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">💬</div>
+                        <h3>對話輸入</h3>
+                        <p>在底部輸入框輸入你的指令</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">📜</div>
+                        <h3>對話歷史</h3>
+                        <p>上方顯示與 Agent 的對話記錄</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: AI 面板操作 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>AI 面板基本操作</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>點擊底部輸入框（或按 <span class="kbd">Ctrl</span>+<span class="kbd">L</span> 快速聚焦）</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>輸入你的指令，例如：<code>幫我建立一個 hello.md 檔案</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>按 <span class="kbd">Enter</span> 送出</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>等待 Agent 回應並執行任務</p>
+                </div>
+                <div class="box success">
+                    <strong>試試看：</strong>輸入「你好」看看 Agent 會怎麼回應！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: 終端機介紹 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>區域 4：終端機面板</h2>
+                <p>底部的終端機，可以執行命令列指令：</p>
+                <div class="step-box">
+                    <p><strong>開啟方式：</strong></p>
+                    <ul>
+                        <li>按 <span class="kbd">Ctrl</span>+<span class="kbd">`</span>（數字 1 左邊的按鍵）</li>
+                        <li>或選單：View → Terminal</li>
+                    </ul>
+                </div>
+                <h3>終端機功能</h3>
+                <ul>
+                    <li>執行 <code>pandoc</code> 等命令列工具</li>
+                    <li>執行 <code>npm</code>、<code>python</code> 等開發指令</li>
+                    <li>Agent 也會在這裡自動執行指令</li>
+                </ul>
+                <div class="box info">
+                    <strong>重點：</strong>這是後面執行 Pandoc 轉換的地方！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: 終端機操作 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>終端機基本操作</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span><strong>新增終端機</strong>：點擊 <code>+</code> 按鈕或 <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">`</span></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span><strong>切換終端機</strong>：點擊下拉選單選擇</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span><strong>關閉終端機</strong>：輸入 <code>exit</code> 或點擊垃圾桶圖示</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span><strong>清除畫面</strong>：輸入 <code>cls</code>（Windows）或 <code>clear</code>（Mac/Linux）</p>
+                </div>
+                <pre><code># 試試在終端機輸入：
+echo "Hello Antigravity!"</code></pre>
+            </div>
+        </div>
+
+        <!-- Slide 12: 命令面板 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>重要功能：命令面板</h2>
+                <div class="step-box">
+                    <p>按 <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">P</span> 開啟命令面板</p>
+                </div>
+                <p>這是 Antigravity 的「萬能搜尋框」，可以：</p>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h3>🔧 執行命令</h3>
+                        <p>輸入命令名稱直接執行</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3">⚙️ 修改設定</h3>
+                        <p>輸入「settings」開啟設定</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>🎨 更換主題</h3>
+                        <p>輸入「theme」更換顏色主題</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3">📦 安裝擴充</h3>
+                        <p>輸入「install」安裝擴充套件</p>
+                    </div>
+                </div>
+                <div class="box success">
+                    <strong>記住這個快捷鍵！</strong><span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">P</span> 是最常用的！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: 快速開啟檔案 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>快速開啟檔案</h2>
+                <div class="step-box">
+                    <p>按 <span class="kbd">Ctrl</span>+<span class="kbd">P</span> 開啟快速開啟</p>
+                </div>
+                <p>直接輸入檔案名稱，快速找到並開啟：</p>
+                <div class="screenshot-placeholder">
+                    [ 快速開啟示意 ]<br><br>
+                    🔍 readme<br>
+                    📄 README.md<br>
+                    📄 readme.txt<br>
+                    📄 src/readme.html
+                </div>
+                <div class="box info">
+                    <strong>技巧：</strong>支援模糊搜尋，輸入 <code>rdm</code> 也能找到 <code>README.md</code>！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: 常用快捷鍵總表 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>必學快捷鍵總表</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #1e3c72; color: white;">
+                        <th style="padding: 12px; text-align: left;">功能</th>
+                        <th style="padding: 12px;">Windows / Linux</th>
+                        <th style="padding: 12px;">macOS</th>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px;">命令面板</td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">P</span></td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Cmd</span>+<span class="kbd">Shift</span>+<span class="kbd">P</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;">快速開啟檔案</td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Ctrl</span>+<span class="kbd">P</span></td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Cmd</span>+<span class="kbd">P</span></td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px;">開啟終端機</td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Ctrl</span>+<span class="kbd">`</span></td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Cmd</span>+<span class="kbd">`</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;">開啟 AI 面板</td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">A</span></td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Cmd</span>+<span class="kbd">Shift</span>+<span class="kbd">A</span></td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px;">儲存檔案</td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Ctrl</span>+<span class="kbd">S</span></td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Cmd</span>+<span class="kbd">S</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;">全部儲存</td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Ctrl</span>+<span class="kbd">K</span> <span class="kbd">S</span></td>
+                        <td style="padding: 12px; text-align: center;"><span class="kbd">Cmd</span>+<span class="kbd">K</span> <span class="kbd">S</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 15: 實作練習 1 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作練習 1：開啟專案資料夾</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>按 <span class="kbd">Ctrl</span>+<span class="kbd">K</span> 然後 <span class="kbd">Ctrl</span>+<span class="kbd">O</span></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>選擇任意一個資料夾（例如桌面）</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>點擊「選擇資料夾」</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>確認左側檔案總管顯示該資料夾的內容</p>
+                </div>
+                <div class="box success">
+                    <strong>成功標準：</strong>左側出現資料夾名稱和檔案列表！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: 實作練習 2 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作練習 2：建立新檔案</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>在左側檔案總管的資料夾名稱上<strong>右鍵</strong></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>選擇「New File」</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>輸入檔名：<code>test.md</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>按 <span class="kbd">Enter</span> 確認</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">5</span>在編輯區輸入：<code># 這是我的第一個檔案</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">6</span>按 <span class="kbd">Ctrl</span>+<span class="kbd">S</span> 儲存</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: 實作練習 3 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作練習 3：使用 AI 面板</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>按 <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">A</span> 開啟 AI 面板</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>在輸入框輸入：<code>請說「哈囉」</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>按 <span class="kbd">Enter</span> 送出</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>等待 Agent 回應</p>
+                </div>
+                <div class="box success">
+                    <strong>成功標準：</strong>Agent 回應「哈囉」或類似的問候！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18: 實作練習 4 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作練習 4：使用終端機</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>按 <span class="kbd">Ctrl</span>+<span class="kbd">`</span> 開啟終端機</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>輸入以下指令並按 Enter：</p>
+                    <pre><code>echo "Antigravity 終端機測試成功！"</code></pre>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>確認終端機顯示：<code>Antigravity 終端機測試成功！</code></p>
+                </div>
+                <div class="box success">
+                    <strong>成功標準：</strong>終端機正確顯示輸出文字！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 19: 測驗 1 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 1</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>開啟命令面板的快捷鍵是什麼？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li><span class="kbd">Ctrl</span>+<span class="kbd">P</span></li>
+                        <li><span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">P</span></li>
+                        <li><span class="kbd">Ctrl</span>+<span class="kbd">`</span></li>
+                        <li><span class="kbd">Ctrl</span>+<span class="kbd">S</span></li>
+                    </ol>
+                    <button class="quiz-btn" onclick="openPasswordModal(19)">🔑 查看解答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 20: 測驗 1 解答 -->
+        <div class="slide locked" id="slide-19">
+            <div class="content-card">
+                <h2>✅ 測驗 1 解答</h2>
+                <div class="box success">
+                    <h3>答案：(2) <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">P</span></h3>
+                    <p><strong>解釋：</strong></p>
+                    <ul>
+                        <li><span class="kbd">Ctrl</span>+<span class="kbd">P</span>：快速開啟檔案</li>
+                        <li><span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">P</span>：命令面板（正解）</li>
+                        <li><span class="kbd">Ctrl</span>+<span class="kbd">`</span>：開啟終端機</li>
+                        <li><span class="kbd">Ctrl</span>+<span class="kbd">S</span>：儲存檔案</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(19)">🔓 點擊解鎖</button>
+            </div>
+        </div>
+
+        <!-- Slide 21: 測驗 2 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 2</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>Antigravity 的 AI 面板位於介面的哪個位置？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li>左側</li>
+                        <li>上方</li>
+                        <li>右側</li>
+                        <li>底部</li>
+                    </ol>
+                    <button class="quiz-btn" onclick="openPasswordModal(21)">🔑 查看解答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 22: 測驗 2 解答 -->
+        <div class="slide locked" id="slide-21">
+            <div class="content-card">
+                <h2>✅ 測驗 2 解答</h2>
+                <div class="box success">
+                    <h3>答案：(3) 右側</h3>
+                    <p><strong>解釋：</strong>Antigravity 的 AI 面板預設在右側，這樣可以一邊看程式碼（中間），一邊與 Agent 對話（右側）。</p>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(21)">🔓 點擊解鎖</button>
+            </div>
+        </div>
+
+        <!-- Slide 23: 總結 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Unit 02 總結</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">📁</div>
+                        <h3>側邊欄</h3>
+                        <p>檔案總管、搜尋、版本控制</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">📝</div>
+                        <h3>編輯區</h3>
+                        <p>撰寫和編輯程式碼</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>AI 面板</h3>
+                        <p>與 Agent 對話互動</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">⌨️</div>
+                        <h3>終端機</h3>
+                        <p>執行命令列指令</p>
+                    </div>
+                </div>
+                <div class="box info" style="margin-top: 30px;">
+                    <h3>下一步：Unit 03</h3>
+                    <p>學習如何選擇和切換 AI 模型（Gemini / Claude）！</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-box">
+            <h2 style="color: #1e3c72;">🔒 解鎖解答</h2>
+            <p style="color: #666;">請輸入密碼</p>
+            <input type="password" class="modal-input" id="passwordInput" placeholder="密碼">
+            <div>
+                <button class="modal-btn" onclick="verifyPassword()">確認</button>
+                <button class="modal-btn" style="background:#999" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide=0;const slides=document.querySelectorAll('.slide'),totalSlides=slides.length;let unlockedSlides=new Set(),pendingUnlockIndex=-1;const CORRECT_PASSWORD="0207";
+        function init(){createIndicators();showSlide(0);updateButtons();document.addEventListener('keydown',handleKeydown)}
+        function handleKeydown(e){if(e.key==='ArrowLeft')changeSlide(-1);if(e.key==='ArrowRight')changeSlide(1);if(e.key==='Enter'&&document.getElementById('passwordModal').style.display==='flex')verifyPassword()}
+        function createIndicators(){const c=document.getElementById('indicatorContainer');slides.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.onclick=()=>goToSlide(i);c.appendChild(d)})}
+        function showSlide(i){if(i<0)i=0;if(i>=totalSlides)i=totalSlides-1;slides.forEach(s=>s.classList.remove('active'));slides[i].classList.add('active');if(!slides[i].classList.contains('locked')||unlockedSlides.has(i))slides[i].classList.remove('locked');currentSlide=i;document.querySelectorAll('.dot').forEach((d,idx)=>d.classList.toggle('active',idx===i));updateButtons()}
+        function changeSlide(d){showSlide(currentSlide+d)}function goToSlide(i){showSlide(i)}
+        function updateButtons(){document.getElementById('prevBtn').disabled=currentSlide===0;document.getElementById('nextBtn').disabled=currentSlide===totalSlides-1}
+        function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else if(document.exitFullscreen)document.exitFullscreen()}
+        function openPasswordModal(i){pendingUnlockIndex=i;document.getElementById('passwordModal').style.display='flex';document.getElementById('passwordInput').value='';document.getElementById('passwordInput').focus()}
+        function closeModal(){document.getElementById('passwordModal').style.display='none'}
+        function verifyPassword(){if(document.getElementById('passwordInput').value===CORRECT_PASSWORD){unlockedSlides.add(pendingUnlockIndex);if(currentSlide===pendingUnlockIndex)slides[currentSlide].classList.remove('locked');else showSlide(pendingUnlockIndex);closeModal()}else{alert("❌ 密碼錯誤！");document.getElementById('passwordInput').value=''}}
+        init();
+    </script>
+</body>
+</html>

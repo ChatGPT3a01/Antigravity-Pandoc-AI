@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 02 Unit 01 - 下載與安裝 Antigravity</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; overflow: hidden; color: #333; }
+        .nav-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.2); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; z-index: 10000; }
+        .nav-title { font-size: 22px; font-weight: 700; color: #fff; }
+        .nav-buttons { display: flex; gap: 12px; }
+        .nav-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.3s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.4); transform: translateY(-2px); }
+        .nav-arrow { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.25); color: white; width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); font-size: 24px; cursor: pointer; z-index: 9000; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
+        .nav-arrow:hover { background: rgba(255,255,255,0.5); transform: translateY(-50%) scale(1.1); }
+        .prev-arrow { left: 30px; }
+        .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .slide-container { width: 100%; height: 100vh; padding-top: 60px; position: relative; z-index: 1; }
+        .slide { position: absolute; top: 60px; left: 0; width: 100%; height: calc(100vh - 60px); display: none; align-items: center; justify-content: center; padding: 40px; opacity: 0; transition: opacity 0.4s ease; z-index: 10; }
+        .slide.active { display: flex; opacity: 1; z-index: 20; }
+        .content-card { background: rgba(255,255,255,0.98); border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); padding: 60px; max-width: 1400px; width: 95%; max-height: 88vh; overflow-y: auto; }
+        .slide.locked .content-card { filter: blur(8px); pointer-events: none; user-select: none; }
+        .unlock-overlay-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 50; pointer-events: none; }
+        .slide.locked .unlock-overlay-container { display: flex; }
+        .unlock-btn { background: rgba(30,60,114,0.95); color: white; border: 2px solid white; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; pointer-events: auto !important; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 20000; }
+        .modal-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; }
+        .modal-input { width: 100%; padding: 15px; font-size: 20px; border: 2px solid #e0e0e0; border-radius: 12px; margin: 20px 0; text-align: center; }
+        .modal-input:focus { border-color: #1e3c72; outline: none; }
+        .modal-btn { background: #1e3c72; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-size: 18px; cursor: pointer; margin: 5px; }
+        h1 { color: #1e3c72; font-size: 56px; margin-bottom: 24px; text-align: center; }
+        h2 { color: #2a5298; font-size: 38px; margin-bottom: 35px; border-bottom: 3px solid #1e3c72; padding-bottom: 12px; }
+        h3 { color: #1e3c72; font-size: 26px; margin: 30px 0 15px 0; }
+        p, li { font-size: 20px; line-height: 1.8; color: #444; margin-bottom: 15px; }
+        code { background: #f0f2f5; padding: 3px 8px; border-radius: 6px; font-family: 'Consolas', monospace; color: #d63384; font-weight: 600; }
+        pre { background: #282c34; color: #abb2bf; padding: 25px; border-radius: 12px; overflow-x: auto; margin: 25px 0; font-size: 18px; line-height: 1.6; font-family: 'Consolas', monospace; }
+        .box { padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 6px solid; font-size: 20px; }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .highlight { background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #004d40; }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 30px; }
+        .concept-card { background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px solid #e9ecef; transition: transform 0.3s; }
+        .concept-card:hover { transform: translateY(-8px); border-color: #4facfe; }
+        .quiz-container { background: linear-gradient(145deg, #ffffff, #f0f4f8); border: 2px solid #1e3c72; border-radius: 20px; padding: 40px; margin: 30px 0; }
+        .quiz-btn { background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .indicators { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 4000; padding: 10px 25px; background: rgba(0,0,0,0.3); border-radius: 30px; }
+        .dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
+        .dot.active { background: #4facfe; transform: scale(1.3); }
+        .step-box { background: #f8f9fa; border-radius: 15px; padding: 25px; margin: 20px 0; border-left: 5px solid #4facfe; }
+        .step-number { display: inline-block; background: #1e3c72; color: white; width: 40px; height: 40px; border-radius: 50%; text-align: center; line-height: 40px; font-weight: bold; margin-right: 15px; }
+        .feature-icon { font-size: 48px; margin-bottom: 15px; }
+        .screenshot-placeholder { background: linear-gradient(145deg, #e0e0e0, #f5f5f5); border: 2px dashed #999; border-radius: 15px; padding: 60px; text-align: center; color: #666; font-size: 18px; margin: 20px 0; }
+        .download-btn { display: inline-block; background: linear-gradient(90deg, #4285f4, #34a853); color: white; padding: 20px 40px; border-radius: 12px; font-size: 22px; font-weight: bold; text-decoration: none; margin: 10px; transition: transform 0.3s; }
+        .download-btn:hover { transform: scale(1.05); }
+        .os-icon { font-size: 64px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <div class="nav-title">Part 02 Unit 01 - 下載與安裝 Antigravity</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-btn" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-btn">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-btn">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container">
+
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <div class="content-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h4 style="color: #4facfe; letter-spacing: 2px; margin-bottom: 10px;">Part 02 - 環境安裝與設定</h4>
+                <h1>Unit 01: 下載與安裝</h1>
+                <h2 style="border: none; font-weight: normal; font-size: 28px; color: #666; max-width: 800px;">
+                    手把手帶你安裝 Google Antigravity
+                </h2>
+                <div style="margin-top: 40px; display: flex; gap: 20px;">
+                    <span class="highlight">Windows</span>
+                    <span class="highlight">macOS</span>
+                    <span class="highlight">Linux</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: 學習目標 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>本單元學習目標</h2>
+                <p>完成本單元後，你將能夠：</p>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">1️⃣</div>
+                        <h3>找到官方下載頁</h3>
+                        <p>知道從哪裡下載正版 Antigravity</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">2️⃣</div>
+                        <h3>完成安裝</h3>
+                        <p>在你的電腦上成功安裝 Antigravity</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">3️⃣</div>
+                        <h3>首次啟動</h3>
+                        <p>第一次開啟並看到歡迎畫面</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">4️⃣</div>
+                        <h3>驗證安裝</h3>
+                        <p>確認安裝成功且可正常運作</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 系統需求 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>安裝前：確認系統需求</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="os-icon">🪟</div>
+                        <h3>Windows</h3>
+                        <ul>
+                            <li>Windows 10 或 11</li>
+                            <li>64 位元系統</li>
+                            <li>4GB RAM 以上</li>
+                            <li>2GB 磁碟空間</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card">
+                        <div class="os-icon">🍎</div>
+                        <h3>macOS</h3>
+                        <ul>
+                            <li>macOS 10.15 以上</li>
+                            <li>Intel 或 Apple Silicon</li>
+                            <li>4GB RAM 以上</li>
+                            <li>2GB 磁碟空間</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card">
+                        <div class="os-icon">🐧</div>
+                        <h3>Linux</h3>
+                        <ul>
+                            <li>Ubuntu 20.04 以上</li>
+                            <li>或其他主流發行版</li>
+                            <li>4GB RAM 以上</li>
+                            <li>2GB 磁碟空間</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="box info">
+                    <strong>提示：</strong>大部分現代電腦都符合這些需求！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: 下載頁面 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 1：前往官方下載頁面</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>開啟你的瀏覽器（Chrome、Edge、Firefox 皆可）</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>在網址列輸入官方網址：</p>
+                    <pre style="background: #1e3c72; text-align: center; font-size: 24px;">https://antigravity.dev/download</pre>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>按下 <code>Enter</code> 前往下載頁面</p>
+                </div>
+                <div class="box warning">
+                    <strong>注意：</strong>請務必從官方網站下載，避免下載到惡意軟體！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 下載頁面截圖 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>下載頁面預覽</h2>
+                <div class="screenshot-placeholder">
+                    [ 官方下載頁面截圖 ]<br><br>
+                    頁面會顯示三個下載按鈕：<br>
+                    🪟 Download for Windows<br>
+                    🍎 Download for macOS<br>
+                    🐧 Download for Linux
+                </div>
+                <div class="box info">
+                    <strong>提示：</strong>網站會自動偵測你的作業系統，推薦對應的版本！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Windows 下載 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 2：下載安裝檔（Windows）</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>點擊 <span class="highlight">Download for Windows</span> 按鈕</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>瀏覽器會開始下載 <code>Antigravity-Setup.exe</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>等待下載完成（約 150-200MB）</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>下載完成後，在瀏覽器底部或「下載」資料夾找到檔案</p>
+                </div>
+                <div class="box info">
+                    <strong>檔案位置：</strong>通常在 <code>C:\Users\你的名字\Downloads\</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: 執行安裝檔 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 3：執行安裝程式</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>找到下載的 <code>Antigravity-Setup.exe</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span><strong>雙擊</strong>檔案開始安裝</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>如果出現「Windows 已保護您的電腦」提示：</p>
+                    <ul>
+                        <li>點擊「更多資訊」</li>
+                        <li>點擊「仍要執行」</li>
+                    </ul>
+                </div>
+                <div class="screenshot-placeholder">
+                    [ Windows SmartScreen 提示截圖 ]
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: 安裝精靈 1 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 4：安裝精靈 - 授權條款</h2>
+                <div class="screenshot-placeholder">
+                    [ 授權條款畫面截圖 ]
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>閱讀授權條款（或直接往下捲）</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>勾選 <code>☑ I accept the agreement</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>點擊 <span class="highlight">Next</span> 繼續</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: 安裝精靈 2 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 5：選擇安裝位置</h2>
+                <div class="screenshot-placeholder">
+                    [ 安裝位置選擇畫面截圖 ]
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>預設安裝位置：<code>C:\Users\你的名字\AppData\Local\Programs\Antigravity</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span><strong>建議：</strong>直接使用預設位置，點擊 <span class="highlight">Next</span></p>
+                </div>
+                <div class="box info">
+                    <strong>提示：</strong>除非有特殊需求，否則不建議更改安裝位置！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: 安裝精靈 3 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 6：選擇附加選項</h2>
+                <div class="screenshot-placeholder">
+                    [ 附加選項畫面截圖 ]
+                </div>
+                <h3>建議勾選的選項：</h3>
+                <ul>
+                    <li>☑ <strong>Create a desktop shortcut</strong> - 在桌面建立捷徑</li>
+                    <li>☑ <strong>Add to PATH</strong> - 加入系統環境變數</li>
+                    <li>☑ <strong>Register as default editor for supported file types</strong> - 設為預設編輯器</li>
+                </ul>
+                <div class="step-box">
+                    <p>勾選完成後，點擊 <span class="highlight">Next</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: 安裝中 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 7：等待安裝完成</h2>
+                <div class="screenshot-placeholder">
+                    [ 安裝進度條畫面截圖 ]<br><br>
+                    Installing...<br>
+                    ████████████░░░░░░░░ 60%
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>點擊 <span class="highlight">Install</span> 開始安裝</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>等待安裝完成（約 1-3 分鐘）</p>
+                </div>
+                <div class="box info">
+                    <strong>請耐心等待：</strong>安裝過程中請勿關閉視窗！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: 安裝完成 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 8：安裝完成！</h2>
+                <div class="screenshot-placeholder">
+                    [ 安裝完成畫面截圖 ]<br><br>
+                    ✅ Completing the Antigravity Setup Wizard<br>
+                    ☑ Launch Antigravity
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>確認勾選 <code>☑ Launch Antigravity</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>點擊 <span class="highlight">Finish</span> 完成安裝並啟動</p>
+                </div>
+                <div class="box success">
+                    <strong>恭喜！</strong>Antigravity 已成功安裝在你的電腦上！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: 首次啟動 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>首次啟動畫面</h2>
+                <div class="screenshot-placeholder">
+                    [ Antigravity 歡迎畫面截圖 ]<br><br>
+                    Welcome to Antigravity<br>
+                    The AI-powered development environment
+                </div>
+                <h3>你會看到三個選項：</h3>
+                <ul>
+                    <li>📁 <strong>Open Folder</strong> - 開啟專案資料夾</li>
+                    <li>📄 <strong>New File</strong> - 建立新檔案</li>
+                    <li>🔄 <strong>Clone Repository</strong> - 複製 Git 儲存庫</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 14: macOS 安裝 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>macOS 安裝步驟</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>下載 <code>Antigravity.dmg</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>雙擊開啟 .dmg 檔案</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>將 Antigravity 圖示<strong>拖曳</strong>到 Applications 資料夾</p>
+                </div>
+                <div class="screenshot-placeholder">
+                    [ macOS 拖曳安裝畫面 ]<br>
+                    🟩 Antigravity → 📁 Applications
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>從 Launchpad 或 Applications 開啟 Antigravity</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: macOS 安全性設定 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>macOS：處理安全性提示</h2>
+                <p>首次開啟時，macOS 可能會顯示安全性警告：</p>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>如果出現「無法打開，因為它來自未識別的開發者」</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>前往 <code>系統偏好設定</code> → <code>安全性與隱私</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>在「一般」分頁，點擊 <span class="highlight">仍要打開</span></p>
+                </div>
+                <div class="box info">
+                    <strong>注意：</strong>這是 macOS 的正常安全機制，Antigravity 是安全的！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: Linux 安裝 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Linux 安裝步驟</h2>
+                <h3>方法 1：使用 .deb 套件（Ubuntu/Debian）</h3>
+                <pre><code># 下載 .deb 檔案後執行：
+sudo dpkg -i antigravity_amd64.deb
+
+# 如果有相依性問題：
+sudo apt-get install -f</code></pre>
+
+                <h3>方法 2：使用 Snap</h3>
+                <pre><code>sudo snap install antigravity --classic</code></pre>
+
+                <h3>方法 3：使用 AppImage</h3>
+                <pre><code># 下載 AppImage 後：
+chmod +x Antigravity.AppImage
+./Antigravity.AppImage</code></pre>
+            </div>
+        </div>
+
+        <!-- Slide 17: 驗證安裝 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>驗證安裝是否成功</h2>
+                <p>確認 Antigravity 已正確安裝：</p>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>開啟 Antigravity</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>按下 <code>Ctrl + Shift + P</code>（Windows/Linux）或 <code>Cmd + Shift + P</code>（Mac）</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>輸入 <code>About</code>，選擇「About Antigravity」</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>確認版本資訊顯示正確</p>
+                </div>
+                <div class="box success">
+                    <strong>成功標準：</strong>看到版本號（如 v1.0.0）表示安裝成功！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18: 終端機驗證 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>從終端機驗證（進階）</h2>
+                <p>如果你勾選了「Add to PATH」，可以從終端機驗證：</p>
+                <h3>Windows（PowerShell）</h3>
+                <pre><code>antigravity --version</code></pre>
+                <h3>macOS / Linux（Terminal）</h3>
+                <pre><code>antigravity --version</code></pre>
+                <div class="box info">
+                    <strong>預期輸出：</strong><code>Antigravity 1.0.0</code>（版本號可能不同）
+                </div>
+                <div class="box warning">
+                    <strong>注意：</strong>Windows 可能需要重新開啟終端機才能使用此指令
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 19: 測驗 1 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 1</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>在 Windows 安裝 Antigravity 時，建議勾選哪個選項？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li>只勾選「Create desktop shortcut」</li>
+                        <li>全部都不勾選</li>
+                        <li>勾選「Add to PATH」和「Create desktop shortcut」</li>
+                        <li>更改安裝位置到 D 槽</li>
+                    </ol>
+                    <hr style="margin: 20px 0;">
+                    <button class="quiz-btn" onclick="openPasswordModal(19)">🔑 查看解答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 20: 測驗 1 解答 -->
+        <div class="slide locked" id="slide-19">
+            <div class="content-card">
+                <h2>✅ 測驗 1 解答</h2>
+                <div class="box success">
+                    <h3>答案：(3) 勾選「Add to PATH」和「Create desktop shortcut」</h3>
+                    <p><strong>解釋：</strong></p>
+                    <ul>
+                        <li>Add to PATH：讓你可以從終端機直接使用 <code>antigravity</code> 指令</li>
+                        <li>Create desktop shortcut：方便從桌面快速啟動</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(19)">🔓 點擊解鎖解答</button>
+            </div>
+        </div>
+
+        <!-- Slide 21: 測驗 2 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 2</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>如何驗證 Antigravity 安裝成功？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li>檢查桌面有沒有捷徑</li>
+                        <li>在 Antigravity 中按 Ctrl+Shift+P，輸入 About</li>
+                        <li>重新開機</li>
+                        <li>檢查 C 槽空間</li>
+                    </ol>
+                    <hr style="margin: 20px 0;">
+                    <button class="quiz-btn" onclick="openPasswordModal(21)">🔑 查看解答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 22: 測驗 2 解答 -->
+        <div class="slide locked" id="slide-21">
+            <div class="content-card">
+                <h2>✅ 測驗 2 解答</h2>
+                <div class="box success">
+                    <h3>答案：(2) 在 Antigravity 中按 Ctrl+Shift+P，輸入 About</h3>
+                    <p><strong>解釋：</strong>這是最準確的驗證方式，可以看到完整的版本資訊，確認軟體正確安裝且可運行。</p>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(21)">🔓 點擊解鎖解答</button>
+            </div>
+        </div>
+
+        <!-- Slide 23: 常見問題 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>常見安裝問題排解</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h3>❓ 下載速度很慢</h3>
+                        <p><strong>解決：</strong>嘗試使用 VPN 或等網路尖峰時段過後再下載</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>❓ 安裝時出現錯誤</h3>
+                        <p><strong>解決：</strong>以系統管理員身份執行安裝程式</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>❓ 啟動後是空白畫面</h3>
+                        <p><strong>解決：</strong>檢查顯示卡驅動程式是否最新</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>❓ 找不到 antigravity 指令</h3>
+                        <p><strong>解決：</strong>重新安裝並勾選「Add to PATH」</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 24: 總結 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Unit 01 總結</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">✅</div>
+                        <h3>已完成</h3>
+                        <ul>
+                            <li>確認系統需求</li>
+                            <li>下載安裝檔</li>
+                            <li>完成安裝程序</li>
+                            <li>驗證安裝成功</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">➡️</div>
+                        <h3>下一步</h3>
+                        <p>Unit 02：介面導覽<br>認識 Antigravity 的各個功能區域</p>
+                    </div>
+                </div>
+                <div class="box success" style="margin-top: 30px;">
+                    <strong>恭喜！</strong>你已成功安裝 Antigravity！接下來學習如何使用它！
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-box">
+            <h2 style="color: #1e3c72;">🔒 解鎖解答</h2>
+            <p style="color: #666;">請輸入密碼以查看隱藏內容</p>
+            <input type="password" class="modal-input" id="passwordInput" placeholder="請輸入密碼">
+            <div>
+                <button class="modal-btn" onclick="verifyPassword()">確認</button>
+                <button class="modal-btn" style="background: #999;" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let unlockedSlides = new Set();
+        let pendingUnlockIndex = -1;
+        const CORRECT_PASSWORD = "0207";
+
+        function init() {
+            createIndicators();
+            showSlide(0);
+            updateButtons();
+            document.addEventListener('keydown', handleKeydown);
+        }
+        function handleKeydown(e) {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'Enter' && document.getElementById('passwordModal').style.display === 'flex') verifyPassword();
+        }
+        function createIndicators() {
+            const container = document.getElementById('indicatorContainer');
+            slides.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.onclick = () => goToSlide(i);
+                container.appendChild(dot);
+            });
+        }
+        function showSlide(index) {
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            slides.forEach(s => s.classList.remove('active'));
+            slides[index].classList.add('active');
+            if (!slides[index].classList.contains('locked') || unlockedSlides.has(index)) {
+                slides[index].classList.remove('locked');
+            }
+            currentSlide = index;
+            document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === index));
+            updateButtons();
+        }
+        function changeSlide(d) { showSlide(currentSlide + d); }
+        function goToSlide(i) { showSlide(i); }
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else if (document.exitFullscreen) document.exitFullscreen();
+        }
+        function openPasswordModal(i) {
+            pendingUnlockIndex = i;
+            document.getElementById('passwordModal').style.display = 'flex';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordInput').focus();
+        }
+        function closeModal() { document.getElementById('passwordModal').style.display = 'none'; }
+        function verifyPassword() {
+            if (document.getElementById('passwordInput').value === CORRECT_PASSWORD) {
+                unlockedSlides.add(pendingUnlockIndex);
+                if (currentSlide === pendingUnlockIndex) slides[currentSlide].classList.remove('locked');
+                else showSlide(pendingUnlockIndex);
+                closeModal();
+            } else {
+                alert("❌ 密碼錯誤！");
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 07 Unit 01：會議記錄自動化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); min-height: 100vh; padding: 20px; }
+        .slide-container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .slide { display: none; padding: 60px; min-height: 700px; position: relative; }
+        .slide.active { display: block; }
+        .slide-number { position: absolute; top: 20px; right: 30px; font-size: 14px; color: #999; }
+        h1 { font-size: 42px; color: #2d3748; margin-bottom: 30px; text-align: center; }
+        h2 { font-size: 36px; color: #4a5568; margin-bottom: 25px; border-bottom: 3px solid #4facfe; padding-bottom: 10px; }
+        h3 { font-size: 28px; color: #2b6cb0; margin: 20px 0 15px 0; }
+        p { font-size: 24px; color: #4a5568; line-height: 1.8; margin-bottom: 20px; }
+        .highlight { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 30px; border-radius: 15px; margin: 20px 0; }
+        .step-box { background: #f7fafc; border-left: 5px solid #4facfe; padding: 25px; margin: 20px 0; border-radius: 0 10px 10px 0; }
+        .success-box { background: #f0fff4; border-left: 5px solid #48bb78; padding: 25px; margin: 20px 0; border-radius: 0 10px 10px 0; }
+        .warning-box { background: #fff5f5; border-left: 5px solid #fc8181; padding: 25px; margin: 20px 0; border-radius: 0 10px 10px 0; }
+        .code-block { background: #1a202c; color: #68d391; padding: 25px; border-radius: 10px; font-family: 'Consolas', monospace; font-size: 16px; margin: 20px 0; overflow-x: auto; white-space: pre-wrap; }
+        ul, ol { font-size: 24px; color: #4a5568; margin-left: 40px; margin-bottom: 20px; }
+        li { margin-bottom: 15px; line-height: 1.6; }
+        .nav-buttons { display: flex; justify-content: center; gap: 20px; margin-top: 30px; padding: 20px; background: #f7fafc; border-top: 1px solid #e2e8f0; }
+        .nav-btn { padding: 15px 40px; font-size: 18px; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s; }
+        .nav-btn.prev { background: #e2e8f0; color: #4a5568; }
+        .nav-btn.next { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+        .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .progress-bar { height: 5px; background: #e2e8f0; }
+        .progress { height: 100%; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); transition: width 0.3s; }
+        .emoji { font-size: 48px; text-align: center; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 18px; }
+        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
+        th { background: #4facfe; color: white; }
+        tr:nth-child(even) { background: #f7fafc; }
+        .file-tree { background: #1a202c; color: #a0aec0; padding: 25px; border-radius: 10px; font-family: 'Consolas', monospace; font-size: 16px; }
+        .file-tree .folder { color: #fbd38d; }
+        .file-tree .file { color: #68d391; }
+        .workflow { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 30px 0; flex-wrap: wrap; }
+        .workflow-step { background: #ebf8ff; border: 2px solid #4facfe; border-radius: 15px; padding: 15px 20px; text-align: center; }
+        .workflow-arrow { font-size: 24px; color: #4facfe; }
+        .quiz-container { background: #ebf8ff; border: 2px solid #4facfe; border-radius: 15px; padding: 30px; margin: 20px 0; }
+        .locked-content { filter: blur(8px); user-select: none; pointer-events: none; }
+        .unlock-form { background: #ebf8ff; border: 2px solid #4facfe; border-radius: 10px; padding: 20px; text-align: center; margin: 20px 0; }
+        .unlock-form input { padding: 10px 20px; font-size: 18px; border: 2px solid #4facfe; border-radius: 8px; margin-right: 10px; }
+        .unlock-form button { padding: 10px 25px; font-size: 18px; background: #4facfe; color: white; border: none; border-radius: 8px; cursor: pointer; }
+
+        /* 頂部導航列 */
+        .nav-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(79, 172, 254, 0.95); backdrop-filter: blur(12px); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .nav-bar .nav-title { font-size: 20px; font-weight: 700; color: #fff; }
+        .nav-bar .nav-buttons { display: flex; gap: 12px; }
+        .nav-bar .nav-link { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.3s; }
+        .nav-bar .nav-link:hover { background: rgba(255,255,255,0.4); transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-title">Part 07 Unit 01 - 會議記錄自動化</div>
+        <div class="nav-buttons">
+            <button class="nav-link" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-link" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-link">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-link">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container" style="margin-top: 70px;">
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+
+        <!-- Slide 1 -->
+        <div class="slide active">
+            <div class="slide-number">1 / 24</div>
+            <div class="emoji">📋</div>
+            <h1>Part 07 Unit 01</h1>
+            <h2 style="text-align: center; border: none;">實戰專案：會議記錄自動化</h2>
+            <div class="highlight" style="text-align: center; margin-top: 60px;">
+                <p style="color: white; font-size: 28px;">從零開始建立完整的</p>
+                <p style="color: white; font-size: 28px;">會議記錄自動處理系統</p>
+            </div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="slide">
+            <div class="slide-number">2 / 24</div>
+            <h2>專案目標</h2>
+            <div class="step-box">
+                <h3>建立會議記錄自動化流程：</h3>
+                <ul>
+                    <li>快速記錄會議重點</li>
+                    <li>AI 自動整理成標準格式</li>
+                    <li>自動生成待辦事項清單</li>
+                    <li>輸出成專業 Word 文件</li>
+                </ul>
+            </div>
+            <div class="success-box">
+                <p>💡 完成後，會議記錄只需 5 分鐘！</p>
+            </div>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="slide">
+            <div class="slide-number">3 / 24</div>
+            <h2>完整流程圖</h2>
+            <div class="workflow">
+                <div class="workflow-step">📝<br>快速筆記</div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">🤖<br>AI 整理</div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">✅<br>生成待辦</div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">📄<br>輸出 Word</div>
+            </div>
+            <div class="step-box">
+                <h3>使用工具</h3>
+                <ul>
+                    <li>Antigravity - AI 整理</li>
+                    <li>Pandoc - 格式轉換</li>
+                    <li>PowerShell - 自動化腳本</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 4 -->
+        <div class="slide">
+            <div class="slide-number">4 / 24</div>
+            <h2>步驟 1：建立專案資料夾</h2>
+            <div class="code-block"># 建立專案結構
+mkdir D:\MeetingNotes
+cd D:\MeetingNotes
+mkdir raw        # 原始筆記
+mkdir processed  # 整理後的 Markdown
+mkdir output     # 輸出的 Word
+mkdir templates  # 模板</div>
+            <div class="file-tree">
+<span class="folder">📁 MeetingNotes/</span>
+├── <span class="folder">📁 raw/</span>
+├── <span class="folder">📁 processed/</span>
+├── <span class="folder">📁 output/</span>
+└── <span class="folder">📁 templates/</span>
+            </div>
+        </div>
+
+        <!-- Slide 5 -->
+        <div class="slide">
+            <div class="slide-number">5 / 24</div>
+            <h2>步驟 2：建立會議記錄模板</h2>
+            <div class="code-block" style="font-size:14px;">---
+title: 會議記錄
+date: YYYY-MM-DD
+attendees: []
+---
+
+# 會議主題
+
+## 基本資訊
+- **日期**：
+- **時間**：
+- **地點**：
+- **主持人**：
+- **記錄**：
+- **出席**：
+
+## 討論事項
+
+### 議題一
+
+### 議題二
+
+## 決議事項
+
+## 待辦事項
+- [ ] 待辦 1（負責人，期限）
+- [ ] 待辦 2（負責人，期限）
+
+## 下次會議
+- **日期**：
+- **議題預告**：</div>
+        </div>
+
+        <!-- Slide 6 -->
+        <div class="slide">
+            <div class="slide-number">6 / 24</div>
+            <h2>步驟 3：快速記錄</h2>
+            <div class="step-box">
+                <h3>會議中快速打字，不用管格式</h3>
+            </div>
+            <div class="code-block" style="color:#a0aec0;">專案進度會議 2025/1/15 下午2點
+參加：王經理 小明 小美 小華
+討論專案進度
+小明：後端完成80% 預計下週完成
+小美：前端設計稿已完成 等待確認
+下週要給客戶看 demo
+預算可能要追加10%
+決定：先完成核心功能再討論追加
+待辦：小明下週五前完成後端 小美準備demo環境
+下次開會：1/22 同一時間</div>
+        </div>
+
+        <!-- Slide 7 -->
+        <div class="slide">
+            <div class="slide-number">7 / 24</div>
+            <h2>步驟 4：AI 整理提示詞</h2>
+            <div class="code-block" style="font-size:14px;">請將以下會議筆記整理成標準格式：
+
+格式要求：
+1. 使用 Markdown 格式
+2. 加入 YAML 元資料（title, date, attendees）
+3. 分類：基本資訊、討論事項、決議、待辦事項、下次會議
+4. 待辦事項使用核取方塊 [ ]，並標示負責人和期限
+5. 重要決議用粗體標示
+
+原始筆記：
+[貼上快速記錄的內容]</div>
+        </div>
+
+        <!-- Slide 8 -->
+        <div class="slide">
+            <div class="slide-number">8 / 24</div>
+            <h2>AI 整理結果</h2>
+            <div class="code-block" style="font-size:12px;">---
+title: 專案進度會議
+date: 2025-01-15
+attendees: [王經理, 小明, 小美, 小華]
+---
+
+# 專案進度會議
+
+## 基本資訊
+- **日期**：2025 年 1 月 15 日（三）
+- **時間**：14:00
+- **出席**：王經理、小明、小美、小華
+
+## 討論事項
+
+### 專案進度
+- **小明（後端）**：完成 80%，預計下週完成
+- **小美（前端）**：設計稿已完成，等待確認
+
+### 預算討論
+- 可能需要追加 10%
+
+## 決議事項
+- **先完成核心功能，再討論預算追加**
+
+## 待辦事項
+- [ ] 完成後端開發（小明，1/22 前）
+- [ ] 準備 Demo 環境（小美，1/21 前）
+
+## 下次會議
+- **日期**：2025 年 1 月 22 日（三）14:00</div>
+        </div>
+
+        <!-- Slide 9 -->
+        <div class="slide">
+            <div class="slide-number">9 / 24</div>
+            <h2>步驟 5：建立 Word 模板</h2>
+            <div class="step-box">
+                <h3>產生 Pandoc 參考文件</h3>
+            </div>
+            <div class="code-block">pandoc -o templates/meeting-template.docx --print-default-data-file reference.docx</div>
+            <div class="step-box">
+                <h3>在 Word 中修改樣式</h3>
+                <ul>
+                    <li>設定公司 Logo 頁首</li>
+                    <li>統一標題字體和顏色</li>
+                    <li>設定頁尾頁碼</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 10 -->
+        <div class="slide">
+            <div class="slide-number">10 / 24</div>
+            <h2>步驟 6：轉換成 Word</h2>
+            <div class="code-block">pandoc processed/meeting-0115.md -o output/meeting-0115.docx --reference-doc=templates/meeting-template.docx</div>
+            <div class="success-box">
+                <p>✅ 專業格式的會議記錄完成！</p>
+            </div>
+        </div>
+
+        <!-- Slide 11 -->
+        <div class="slide">
+            <div class="slide-number">11 / 24</div>
+            <h2>步驟 7：建立自動化腳本</h2>
+            <div class="code-block" style="font-size:12px;"># process-meeting.ps1
+# 會議記錄處理腳本
+
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$RawFile
+)
+
+$baseName = [IO.Path]::GetFileNameWithoutExtension($RawFile)
+$date = Get-Date -Format "yyyyMMdd"
+$processedFile = "processed\$baseName-$date.md"
+$outputFile = "output\$baseName-$date.docx"
+
+Write-Host "📋 處理會議記錄: $RawFile" -ForegroundColor Cyan
+
+# 提示使用者進行 AI 整理
+Write-Host "`n請在 AI 面板中：" -ForegroundColor Yellow
+Write-Host "1. 貼上 raw\$RawFile 的內容"
+Write-Host "2. 使用會議記錄整理提示詞"
+Write-Host "3. 儲存結果到 $processedFile"
+Write-Host "`n完成後按 Enter 繼續..." -ForegroundColor Yellow
+Read-Host
+
+# 轉換成 Word
+if (Test-Path $processedFile) {
+    pandoc $processedFile -o $outputFile --reference-doc=templates\meeting-template.docx
+    Write-Host "✅ 輸出完成: $outputFile" -ForegroundColor Green
+} else {
+    Write-Host "❌ 找不到處理後的檔案" -ForegroundColor Red
+}</div>
+        </div>
+
+        <!-- Slide 12 -->
+        <div class="slide">
+            <div class="slide-number">12 / 24</div>
+            <h2>步驟 8：提取待辦事項</h2>
+            <div class="code-block" style="font-size:14px;"># extract-todos.ps1
+# 從會議記錄提取待辦事項
+
+param([string]$File)
+
+$content = Get-Content $File -Raw
+$todos = [regex]::Matches($content, '- \[ \] (.+)')
+
+Write-Host "`n📋 待辦事項清單" -ForegroundColor Cyan
+Write-Host "================`n"
+
+foreach ($todo in $todos) {
+    Write-Host "□ $($todo.Groups[1].Value)"
+}
+
+# 輸出到獨立檔案
+$todoFile = "output\todos-$(Get-Date -Format 'yyyyMMdd').md"
+"# 待辦事項`n" | Out-File $todoFile
+foreach ($todo in $todos) {
+    "- [ ] $($todo.Groups[1].Value)" | Add-Content $todoFile
+}
+
+Write-Host "`n✅ 已輸出到: $todoFile" -ForegroundColor Green</div>
+        </div>
+
+        <!-- Slide 13 -->
+        <div class="slide">
+            <div class="slide-number">13 / 24</div>
+            <h2>步驟 9：完整工作流程</h2>
+            <div class="step-box">
+                <h3>每次會議的標準流程</h3>
+                <ol>
+                    <li>會議中用 <code>raw/meeting-日期.txt</code> 快速記錄</li>
+                    <li>會後執行 <code>.\process-meeting.ps1 meeting-日期.txt</code></li>
+                    <li>在 AI 面板整理並儲存</li>
+                    <li>腳本自動轉換成 Word</li>
+                    <li>執行 <code>.\extract-todos.ps1</code> 提取待辦</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Slide 14 -->
+        <div class="slide">
+            <div class="slide-number">14 / 24</div>
+            <h2>進階：會議記錄範本庫</h2>
+            <table>
+                <tr><th>會議類型</th><th>範本特點</th></tr>
+                <tr><td>專案進度會議</td><td>進度追蹤、風險、待辦</td></tr>
+                <tr><td>客戶會議</td><td>需求記錄、報價、時程</td></tr>
+                <tr><td>週會/月會</td><td>各部門報告、KPI</td></tr>
+                <tr><td>腦力激盪</td><td>點子列表、投票結果</td></tr>
+                <tr><td>面試記錄</td><td>評分、問答、建議</td></tr>
+            </table>
+        </div>
+
+        <!-- Slide 15 -->
+        <div class="slide">
+            <div class="slide-number">15 / 24</div>
+            <h2>進階：自動歸檔</h2>
+            <div class="code-block" style="font-size:14px;"># archive-meetings.ps1
+# 按月份歸檔會議記錄
+
+$files = Get-ChildItem output\*.docx
+
+foreach ($file in $files) {
+    # 從檔名提取日期
+    if ($file.Name -match '(\d{4})(\d{2})') {
+        $year = $Matches[1]
+        $month = $Matches[2]
+        $archivePath = "archive\$year\$month"
+
+        if (!(Test-Path $archivePath)) {
+            New-Item -ItemType Directory -Path $archivePath -Force
+        }
+
+        Move-Item $file.FullName -Destination $archivePath
+        Write-Host "📁 $($file.Name) → $archivePath"
+    }
+}</div>
+        </div>
+
+        <!-- Slide 16 -->
+        <div class="slide">
+            <div class="slide-number">16 / 24</div>
+            <h2>進階：生成會議摘要郵件</h2>
+            <div class="code-block" style="font-size:14px;">請根據這份會議記錄，生成一封簡短的摘要郵件：
+
+格式：
+主旨：[會議名稱] 會議摘要 - [日期]
+
+正文：
+- 開頭問候
+- 會議重點（3-5 點）
+- 待辦事項提醒
+- 下次會議預告
+- 結尾
+
+語氣：專業、簡潔
+
+[貼上會議記錄]</div>
+        </div>
+
+        <!-- Slide 17 -->
+        <div class="slide">
+            <div class="slide-number">17 / 24</div>
+            <h2>最終專案結構</h2>
+            <div class="file-tree">
+<span class="folder">📁 MeetingNotes/</span>
+├── <span class="folder">📁 raw/</span>            原始快速筆記
+├── <span class="folder">📁 processed/</span>      整理後 Markdown
+├── <span class="folder">📁 output/</span>         Word 輸出
+├── <span class="folder">📁 templates/</span>      模板
+│   └── <span class="file">meeting-template.docx</span>
+├── <span class="folder">📁 archive/</span>        歸檔
+│   └── <span class="folder">📁 2025/</span>
+│       └── <span class="folder">📁 01/</span>
+├── <span class="file">process-meeting.ps1</span>
+├── <span class="file">extract-todos.ps1</span>
+└── <span class="file">archive-meetings.ps1</span>
+            </div>
+        </div>
+
+        <!-- Slide 18 -->
+        <div class="slide">
+            <div class="slide-number">18 / 24</div>
+            <h2>效率比較</h2>
+            <table>
+                <tr><th>項目</th><th>傳統方式</th><th>自動化</th></tr>
+                <tr><td>記錄時間</td><td>30 分鐘</td><td>5 分鐘</td></tr>
+                <tr><td>整理時間</td><td>20 分鐘</td><td>2 分鐘</td></tr>
+                <tr><td>格式排版</td><td>15 分鐘</td><td>自動</td></tr>
+                <tr><td>待辦提取</td><td>5 分鐘</td><td>自動</td></tr>
+                <tr><th>總計</th><th>70 分鐘</th><th>7 分鐘</th></tr>
+            </table>
+            <div class="success-box">
+                <p>🚀 效率提升 90%！</p>
+            </div>
+        </div>
+
+        <!-- Slide 19 -->
+        <div class="slide">
+            <div class="slide-number">19 / 24</div>
+            <h2>動手練習</h2>
+            <div class="quiz-container">
+                <h3>完成以下任務：</h3>
+                <ol>
+                    <li>建立 MeetingNotes 專案資料夾結構</li>
+                    <li>建立會議記錄模板</li>
+                    <li>模擬一次會議快速記錄</li>
+                    <li>使用 AI 整理成標準格式</li>
+                    <li>轉換成 Word 文件</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Slide 20 -->
+        <div class="slide">
+            <div class="slide-number">20 / 24</div>
+            <h2>練習答案</h2>
+            <div class="unlock-form" id="unlockForm">
+                <p>🔒 輸入密碼查看答案</p>
+                <input type="password" id="passwordInput" placeholder="請輸入密碼">
+                <button onclick="unlock()">解鎖</button>
+            </div>
+            <div id="lockedContent" class="locked-content">
+                <div class="code-block" style="font-size:12px;"># 1. 建立資料夾
+mkdir D:\MeetingNotes; cd D:\MeetingNotes
+mkdir raw, processed, output, templates
+
+# 2. 建立模板（使用前面的範本）
+
+# 3. 模擬記錄
+"測試會議 1/15 小明小美 討論進度 決定下週完成" |
+    Out-File raw\test-meeting.txt
+
+# 4. AI 整理後儲存到 processed\test-meeting.md
+
+# 5. 轉換
+pandoc processed\test-meeting.md -o output\test-meeting.docx</div>
+            </div>
+        </div>
+
+        <!-- Slide 21-24: 總結等 -->
+        <div class="slide">
+            <div class="slide-number">21 / 24</div>
+            <h2>常見問題</h2>
+            <table>
+                <tr><th>問題</th><th>解決方案</th></tr>
+                <tr><td>AI 整理格式不對</td><td>提供更詳細的格式範例</td></tr>
+                <tr><td>中文排版問題</td><td>在模板設定中文字體</td></tr>
+                <tr><td>待辦提取不完整</td><td>確認使用標準 [ ] 格式</td></tr>
+                <tr><td>檔案命名混亂</td><td>統一使用日期命名規則</td></tr>
+            </table>
+        </div>
+
+        <div class="slide">
+            <div class="slide-number">22 / 24</div>
+            <h2>擴展可能性</h2>
+            <div class="step-box">
+                <ul>
+                    <li>🔊 結合語音轉文字，直接錄音後整理</li>
+                    <li>📧 自動發送會議摘要郵件</li>
+                    <li>📊 統計會議數據（時長、頻率）</li>
+                    <li>🔗 整合專案管理工具</li>
+                    <li>☁️ 雲端同步和協作</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-number">23 / 24</div>
+            <h2>專案檢核清單</h2>
+            <div class="step-box">
+                <ul>
+                    <li>✅ 資料夾結構建立完成</li>
+                    <li>✅ 會議記錄模板建立</li>
+                    <li>✅ Word 參考模板設定</li>
+                    <li>✅ AI 整理提示詞準備</li>
+                    <li>✅ 自動化腳本建立</li>
+                    <li>✅ 完成一次完整流程測試</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-number">24 / 24</div>
+            <h2>本單元總結</h2>
+            <div class="highlight">
+                <h3 style="color: white;">專案成果：</h3>
+                <ul style="color: white;">
+                    <li>完整的會議記錄自動化系統</li>
+                    <li>從 70 分鐘縮短到 7 分鐘</li>
+                    <li>統一格式、專業輸出</li>
+                    <li>自動追蹤待辦事項</li>
+                </ul>
+            </div>
+            <p style="text-align: center; margin-top: 30px;">下一專案：技術文件產生器 📖</p>
+        </div>
+
+        <div class="nav-buttons">
+            <button class="nav-btn prev" onclick="prevSlide()" id="prevBtn">← 上一頁</button>
+            <button class="nav-btn next" onclick="nextSlide()" id="nextBtn">下一頁 →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            document.getElementById('progress').style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+        function nextSlide() { if (currentSlide < totalSlides - 1) showSlide(currentSlide + 1); }
+        function prevSlide() { if (currentSlide > 0) showSlide(currentSlide - 1); }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            else if (e.key === 'ArrowLeft') prevSlide();
+        });
+        function unlock() {
+            if (document.getElementById('passwordInput').value === '0207') {
+                document.getElementById('lockedContent').classList.remove('locked-content');
+                document.getElementById('unlockForm').style.display = 'none';
+            } else { alert('密碼錯誤！'); }
+        }
+        showSlide(0);
+    </script>
+</body>
+</html>

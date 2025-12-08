@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 04 Unit 01：批次轉換多個檔案</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .slide-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .slide {
+            display: none;
+            padding: 60px;
+            min-height: 700px;
+            position: relative;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        h1 {
+            font-size: 42px;
+            color: #2d3748;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 36px;
+            color: #4a5568;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 28px;
+            color: #553c9a;
+            margin: 20px 0 15px 0;
+        }
+
+        p {
+            font-size: 24px;
+            color: #4a5568;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .step-box {
+            background: #f7fafc;
+            border-left: 5px solid #667eea;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .warning-box {
+            background: #fff5f5;
+            border-left: 5px solid #fc8181;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .success-box {
+            background: #f0fff4;
+            border-left: 5px solid #48bb78;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .code-block {
+            background: #1a202c;
+            color: #68d391;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .code-inline {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-family: 'Consolas', monospace;
+            font-size: 22px;
+        }
+
+        ul, ol {
+            font-size: 24px;
+            color: #4a5568;
+            margin-left: 40px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .nav-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.prev {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .nav-btn.next {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-bar {
+            height: 5px;
+            background: #e2e8f0;
+            position: relative;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .emoji {
+            font-size: 48px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 20px;
+        }
+
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            text-align: left;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .comparison > div {
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        .before {
+            background: #fed7d7;
+            border: 2px solid #fc8181;
+        }
+
+        .after {
+            background: #c6f6d5;
+            border: 2px solid #48bb78;
+        }
+
+        .quiz-container {
+            background: #faf5ff;
+            border: 2px solid #9f7aea;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .file-tree {
+            background: #1a202c;
+            color: #a0aec0;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Consolas', monospace;
+            font-size: 18px;
+        }
+
+        .file-tree .folder {
+            color: #fbd38d;
+        }
+
+        .file-tree .file {
+            color: #68d391;
+        }
+
+        .shortcut-key {
+            display: inline-block;
+            background: #edf2f7;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-family: 'Consolas', monospace;
+            font-size: 18px;
+            color: #2d3748;
+            box-shadow: 0 2px 0 #a0aec0;
+        }
+
+        .locked-content {
+            filter: blur(8px);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .unlock-form {
+            background: #faf5ff;
+            border: 2px solid #9f7aea;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .unlock-form input {
+            padding: 10px 20px;
+            font-size: 18px;
+            border: 2px solid #9f7aea;
+            border-radius: 8px;
+            margin-right: 10px;
+        }
+
+        .unlock-form button {
+            padding: 10px 25px;
+            font-size: 18px;
+            background: #9f7aea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .command-table {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        /* 頂部導航列 */
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(102, 126, 234, 0.95);
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .nav-bar .nav-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .nav-bar .nav-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        .nav-bar .nav-link {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .nav-bar .nav-link:hover {
+            background: rgba(255,255,255,0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- 頂部導航列 -->
+    <div class="nav-bar">
+        <div class="nav-title">Part 04 Unit 01 - 批次轉換多個檔案</div>
+        <div class="nav-buttons">
+            <button class="nav-link" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-link" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-link">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-link">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container" style="margin-top: 70px;">
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <!-- Slide 1: 標題頁 -->
+        <div class="slide active">
+            <div class="slide-number">1 / 22</div>
+            <div class="emoji">📚</div>
+            <h1>Part 04 Unit 01</h1>
+            <h2 style="text-align: center; border: none;">批次轉換多個檔案</h2>
+            <div class="highlight" style="text-align: center; margin-top: 60px;">
+                <p style="color: white; font-size: 28px;">一次轉換大量檔案</p>
+                <p style="color: white; font-size: 28px;">告別手動重複操作</p>
+            </div>
+            <p style="text-align: center; margin-top: 40px; color: #999;">
+                使用鍵盤 ← → 或點擊按鈕翻頁
+            </p>
+        </div>
+
+        <!-- Slide 2: 學習目標 -->
+        <div class="slide">
+            <div class="slide-number">2 / 22</div>
+            <h2>學習目標</h2>
+            <div class="step-box">
+                <h3>完成本單元後，你將學會：</h3>
+                <ul>
+                    <li>理解為何需要批次轉換</li>
+                    <li>使用 PowerShell 批次處理檔案</li>
+                    <li>撰寫簡單的批次轉換指令</li>
+                    <li>處理不同資料夾的檔案</li>
+                </ul>
+            </div>
+            <div class="success-box">
+                <p>💡 從手動一個一個轉，進化到一次轉完所有檔案！</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: 為什麼需要批次轉換 -->
+        <div class="slide">
+            <div class="slide-number">3 / 22</div>
+            <h2>為什麼需要批次轉換？</h2>
+            <div class="comparison">
+                <div class="before">
+                    <h3>😰 手動轉換</h3>
+                    <ul>
+                        <li>一個檔案一個指令</li>
+                        <li>100 個檔案 = 100 次操作</li>
+                        <li>容易出錯遺漏</li>
+                        <li>耗時費力</li>
+                    </ul>
+                </div>
+                <div class="after">
+                    <h3>🚀 批次轉換</h3>
+                    <ul>
+                        <li>一個指令處理全部</li>
+                        <li>100 個檔案 = 1 次操作</li>
+                        <li>自動化不出錯</li>
+                        <li>省時省力</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: 情境說明 -->
+        <div class="slide">
+            <div class="slide-number">4 / 22</div>
+            <h2>實際情境</h2>
+            <div class="step-box">
+                <h3>假設你有這樣的資料夾：</h3>
+            </div>
+            <div class="file-tree">
+                <span class="folder">📁 我的筆記/</span><br>
+                ├── <span class="file">📄 會議記錄01.md</span><br>
+                ├── <span class="file">📄 會議記錄02.md</span><br>
+                ├── <span class="file">📄 會議記錄03.md</span><br>
+                ├── <span class="file">📄 專案報告.md</span><br>
+                ├── <span class="file">📄 週報0101.md</span><br>
+                ├── <span class="file">📄 週報0108.md</span><br>
+                └── <span class="file">📄 學習筆記.md</span>
+            </div>
+            <p style="margin-top: 20px;">想要把所有 .md 檔案都轉成 .docx 該怎麼做？</p>
+        </div>
+
+        <!-- Slide 5: 準備練習檔案 -->
+        <div class="slide">
+            <div class="slide-number">5 / 22</div>
+            <h2>步驟 1：準備練習檔案</h2>
+            <div class="step-box">
+                <h3>在 Antigravity 中建立練習資料夾</h3>
+                <p>開啟終端機 <span class="shortcut-key">Ctrl + `</span></p>
+            </div>
+            <div class="code-block">
+# 建立練習資料夾
+mkdir D:\練習批次轉換
+
+# 進入資料夾
+cd D:\練習批次轉換
+            </div>
+            <div class="success-box">
+                <p>💡 使用專門的資料夾練習，避免影響其他檔案</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: 建立測試檔案 -->
+        <div class="slide">
+            <div class="slide-number">6 / 22</div>
+            <h2>步驟 2：建立測試檔案</h2>
+            <div class="step-box">
+                <h3>使用 PowerShell 快速建立多個測試檔案</h3>
+            </div>
+            <div class="code-block">
+# 建立 5 個測試 Markdown 檔案
+1..5 | ForEach-Object {
+    "# 測試文件 $_`n這是第 $_ 個測試檔案。" |
+    Out-File -FilePath "test$_.md" -Encoding UTF8
+}
+            </div>
+            <div class="success-box">
+                <p>✅ 這會建立 test1.md、test2.md ... test5.md</p>
+            </div>
+        </div>
+
+        <!-- Slide 7: 確認檔案建立 -->
+        <div class="slide">
+            <div class="slide-number">7 / 22</div>
+            <h2>步驟 3：確認檔案已建立</h2>
+            <div class="step-box">
+                <h3>列出資料夾中的檔案</h3>
+            </div>
+            <div class="code-block">
+# 列出所有 .md 檔案
+Get-ChildItem *.md
+            </div>
+            <p>你應該會看到：</p>
+            <div class="code-block" style="color: #a0aec0;">
+Mode          LastWriteTime    Length Name
+----          -------------    ------ ----
+-a----        2025/01/01       42     test1.md
+-a----        2025/01/01       43     test2.md
+-a----        2025/01/01       43     test3.md
+-a----        2025/01/01       43     test4.md
+-a----        2025/01/01       43     test5.md
+            </div>
+        </div>
+
+        <!-- Slide 8: 批次轉換核心概念 -->
+        <div class="slide">
+            <div class="slide-number">8 / 22</div>
+            <h2>批次轉換的核心概念</h2>
+            <div class="highlight">
+                <h3 style="color: white;">迴圈 + Pandoc = 批次轉換</h3>
+                <p style="color: white;">對每一個檔案，執行一次 Pandoc 指令</p>
+            </div>
+            <div class="step-box">
+                <h3>PowerShell 迴圈結構：</h3>
+                <p><code class="code-inline">ForEach-Object</code> - 對每個物件執行動作</p>
+            </div>
+            <div class="code-block">
+# 虛擬碼概念
+取得所有 .md 檔案 | 對每個檔案 {
+    pandoc 這個檔案 轉成 .docx
+}
+            </div>
+        </div>
+
+        <!-- Slide 9: 實際指令 -->
+        <div class="slide">
+            <div class="slide-number">9 / 22</div>
+            <h2>步驟 4：執行批次轉換</h2>
+            <div class="step-box">
+                <h3>關鍵指令！請記住這個：</h3>
+            </div>
+            <div class="code-block">
+Get-ChildItem *.md | ForEach-Object {
+    pandoc $_.Name -o ($_.BaseName + ".docx")
+}
+            </div>
+            <div class="success-box">
+                <h3>指令解析：</h3>
+                <ul>
+                    <li><code class="code-inline">Get-ChildItem *.md</code> - 取得所有 .md 檔案</li>
+                    <li><code class="code-inline">|</code> - 管道，傳遞給下一個指令</li>
+                    <li><code class="code-inline">ForEach-Object</code> - 對每個檔案執行</li>
+                    <li><code class="code-inline">$_.Name</code> - 當前檔案名稱</li>
+                    <li><code class="code-inline">$_.BaseName</code> - 不含副檔名的名稱</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 10: 確認轉換結果 -->
+        <div class="slide">
+            <div class="slide-number">10 / 22</div>
+            <h2>步驟 5：確認轉換結果</h2>
+            <div class="step-box">
+                <h3>列出所有 .docx 檔案</h3>
+            </div>
+            <div class="code-block">
+Get-ChildItem *.docx
+            </div>
+            <p>你應該會看到：</p>
+            <div class="code-block" style="color: #a0aec0;">
+Mode          LastWriteTime    Length Name
+----          -------------    ------ ----
+-a----        2025/01/01       4521   test1.docx
+-a----        2025/01/01       4522   test2.docx
+-a----        2025/01/01       4523   test3.docx
+-a----        2025/01/01       4524   test4.docx
+-a----        2025/01/01       4525   test5.docx
+            </div>
+            <div class="success-box">
+                <p>🎉 5 個檔案一次全部轉換完成！</p>
+            </div>
+        </div>
+
+        <!-- Slide 11: 轉換成其他格式 -->
+        <div class="slide">
+            <div class="slide-number">11 / 22</div>
+            <h2>變化：轉換成其他格式</h2>
+            <div class="step-box">
+                <h3>轉成 HTML</h3>
+            </div>
+            <div class="code-block">
+Get-ChildItem *.md | ForEach-Object {
+    pandoc $_.Name -o ($_.BaseName + ".html") --standalone
+}
+            </div>
+            <div class="step-box">
+                <h3>轉成 PDF（需安裝 LaTeX）</h3>
+            </div>
+            <div class="code-block">
+Get-ChildItem *.md | ForEach-Object {
+    pandoc $_.Name -o ($_.BaseName + ".pdf")
+}
+            </div>
+        </div>
+
+        <!-- Slide 12: 篩選特定檔案 -->
+        <div class="slide">
+            <div class="slide-number">12 / 22</div>
+            <h2>進階：篩選特定檔案</h2>
+            <div class="step-box">
+                <h3>只轉換名稱含有「會議」的檔案</h3>
+            </div>
+            <div class="code-block">
+Get-ChildItem *.md | Where-Object {
+    $_.Name -like "*會議*"
+} | ForEach-Object {
+    pandoc $_.Name -o ($_.BaseName + ".docx")
+}
+            </div>
+            <div class="step-box">
+                <h3>只轉換最近 7 天修改的檔案</h3>
+            </div>
+            <div class="code-block">
+Get-ChildItem *.md | Where-Object {
+    $_.LastWriteTime -gt (Get-Date).AddDays(-7)
+} | ForEach-Object {
+    pandoc $_.Name -o ($_.BaseName + ".docx")
+}
+            </div>
+        </div>
+
+        <!-- Slide 13: 輸出到指定資料夾 -->
+        <div class="slide">
+            <div class="slide-number">13 / 22</div>
+            <h2>進階：輸出到指定資料夾</h2>
+            <div class="step-box">
+                <h3>建立輸出資料夾並轉換</h3>
+            </div>
+            <div class="code-block">
+# 建立輸出資料夾
+mkdir output
+
+# 轉換並輸出到 output 資料夾
+Get-ChildItem *.md | ForEach-Object {
+    pandoc $_.Name -o ("output\" + $_.BaseName + ".docx")
+}
+            </div>
+            <div class="file-tree" style="margin-top: 20px;">
+                <span class="folder">📁 練習批次轉換/</span><br>
+                ├── <span class="file">📄 test1.md</span><br>
+                ├── <span class="file">📄 test2.md</span><br>
+                └── <span class="folder">📁 output/</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">📄 test1.docx</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;└── <span class="file">📄 test2.docx</span>
+            </div>
+        </div>
+
+        <!-- Slide 14: 處理子資料夾 -->
+        <div class="slide">
+            <div class="slide-number">14 / 22</div>
+            <h2>進階：處理子資料夾內的檔案</h2>
+            <div class="step-box">
+                <h3>使用 -Recurse 參數遞迴搜尋</h3>
+            </div>
+            <div class="code-block">
+# 轉換所有子資料夾中的 .md 檔案
+Get-ChildItem *.md -Recurse | ForEach-Object {
+    $outputPath = $_.DirectoryName + "\" + $_.BaseName + ".docx"
+    pandoc $_.FullName -o $outputPath
+}
+            </div>
+            <div class="warning-box">
+                <p>⚠️ <code class="code-inline">-Recurse</code> 會搜尋所有子資料夾</p>
+                <p>使用時請確認範圍，避免意外轉換不需要的檔案</p>
+            </div>
+        </div>
+
+        <!-- Slide 15: 加入進度顯示 -->
+        <div class="slide">
+            <div class="slide-number">15 / 22</div>
+            <h2>進階：加入進度顯示</h2>
+            <div class="step-box">
+                <h3>讓轉換過程更清楚</h3>
+            </div>
+            <div class="code-block">
+$files = Get-ChildItem *.md
+$total = $files.Count
+$current = 0
+
+$files | ForEach-Object {
+    $current++
+    Write-Host "[$current/$total] 轉換: $($_.Name)"
+    pandoc $_.Name -o ($_.BaseName + ".docx")
+}
+
+Write-Host "✅ 轉換完成！共 $total 個檔案"
+            </div>
+            <div class="code-block" style="color: #a0aec0;">
+[1/5] 轉換: test1.md
+[2/5] 轉換: test2.md
+[3/5] 轉換: test3.md
+[4/5] 轉換: test4.md
+[5/5] 轉換: test5.md
+✅ 轉換完成！共 5 個檔案
+            </div>
+        </div>
+
+        <!-- Slide 16: 常見問題 -->
+        <div class="slide">
+            <div class="slide-number">16 / 22</div>
+            <h2>常見問題排解</h2>
+            <table>
+                <tr>
+                    <th>問題</th>
+                    <th>原因</th>
+                    <th>解決方法</th>
+                </tr>
+                <tr>
+                    <td>沒有任何輸出</td>
+                    <td>資料夾內沒有 .md 檔案</td>
+                    <td>確認在正確的資料夾</td>
+                </tr>
+                <tr>
+                    <td>檔名有空格報錯</td>
+                    <td>路徑需要引號</td>
+                    <td>使用雙引號包住路徑</td>
+                </tr>
+                <tr>
+                    <td>中文檔名亂碼</td>
+                    <td>編碼問題</td>
+                    <td>確保 UTF-8 編碼</td>
+                </tr>
+                <tr>
+                    <td>部分檔案失敗</td>
+                    <td>檔案內容有問題</td>
+                    <td>單獨檢查該檔案</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Slide 17: 處理空格檔名 -->
+        <div class="slide">
+            <div class="slide-number">17 / 22</div>
+            <h2>處理有空格的檔名</h2>
+            <div class="step-box">
+                <h3>使用 FullName 和引號處理</h3>
+            </div>
+            <div class="code-block">
+Get-ChildItem *.md | ForEach-Object {
+    $input = "`"$($_.FullName)`""
+    $output = "`"$($_.DirectoryName)\$($_.BaseName).docx`""
+    pandoc $input -o $output
+}
+            </div>
+            <div class="success-box">
+                <p>💡 使用 <code class="code-inline">FullName</code> 取得完整路徑，再用引號包住</p>
+            </div>
+        </div>
+
+        <!-- Slide 18: 完整腳本範例 -->
+        <div class="slide">
+            <div class="slide-number">18 / 22</div>
+            <h2>完整實用腳本</h2>
+            <div class="code-block" style="font-size: 16px;">
+# 批次轉換腳本 - 從 Markdown 到 Word
+# 使用方式：在含有 .md 檔案的資料夾執行
+
+$ErrorActionPreference = "Continue"
+$files = Get-ChildItem -Filter "*.md"
+
+if ($files.Count -eq 0) {
+    Write-Host "❌ 找不到任何 .md 檔案" -ForegroundColor Red
+    exit
+}
+
+Write-Host "🔍 找到 $($files.Count) 個 Markdown 檔案" -ForegroundColor Cyan
+
+$success = 0
+$failed = 0
+
+foreach ($file in $files) {
+    Write-Host "📄 轉換: $($file.Name)" -NoNewline
+    try {
+        pandoc $file.Name -o ($file.BaseName + ".docx")
+        Write-Host " ✅" -ForegroundColor Green
+        $success++
+    } catch {
+        Write-Host " ❌" -ForegroundColor Red
+        $failed++
+    }
+}
+
+Write-Host "`n📊 完成！成功: $success, 失敗: $failed"
+            </div>
+        </div>
+
+        <!-- Slide 19: 一行指令版 -->
+        <div class="slide">
+            <div class="slide-number">19 / 22</div>
+            <h2>快速參考：一行指令</h2>
+            <div class="step-box">
+                <h3>最常用的批次轉換指令</h3>
+            </div>
+            <table>
+                <tr>
+                    <th>用途</th>
+                    <th>指令</th>
+                </tr>
+                <tr>
+                    <td>MD → DOCX</td>
+                    <td><code style="font-size: 14px;">gci *.md | % { pandoc $_.Name -o ($_.BaseName + ".docx") }</code></td>
+                </tr>
+                <tr>
+                    <td>MD → HTML</td>
+                    <td><code style="font-size: 14px;">gci *.md | % { pandoc $_.Name -o ($_.BaseName + ".html") }</code></td>
+                </tr>
+                <tr>
+                    <td>DOCX → MD</td>
+                    <td><code style="font-size: 14px;">gci *.docx | % { pandoc $_.Name -o ($_.BaseName + ".md") }</code></td>
+                </tr>
+            </table>
+            <div class="success-box">
+                <p>💡 <code class="code-inline">gci</code> 是 <code class="code-inline">Get-ChildItem</code> 的縮寫</p>
+                <p>💡 <code class="code-inline">%</code> 是 <code class="code-inline">ForEach-Object</code> 的縮寫</p>
+            </div>
+        </div>
+
+        <!-- Slide 20: 實作練習 -->
+        <div class="slide">
+            <div class="slide-number">20 / 22</div>
+            <h2>動手練習</h2>
+            <div class="quiz-container">
+                <h3>練習任務</h3>
+                <ol>
+                    <li>建立資料夾 <code class="code-inline">D:\批次練習</code></li>
+                    <li>在資料夾內建立 3 個 .md 測試檔案</li>
+                    <li>使用批次指令將所有 .md 轉成 .docx</li>
+                    <li>確認 3 個 .docx 檔案都已建立</li>
+                </ol>
+            </div>
+            <div class="step-box">
+                <h3>預期結果</h3>
+                <p>資料夾內應該有 3 個 .md 和 3 個 .docx 檔案</p>
+            </div>
+        </div>
+
+        <!-- Slide 21: 答案 -->
+        <div class="slide">
+            <div class="slide-number">21 / 22</div>
+            <h2>練習答案</h2>
+            <div class="unlock-form" id="unlockForm">
+                <p>🔒 輸入密碼查看答案</p>
+                <input type="password" id="passwordInput" placeholder="請輸入密碼">
+                <button onclick="unlock()">解鎖</button>
+            </div>
+            <div id="lockedContent" class="locked-content">
+                <div class="code-block">
+# 1. 建立資料夾
+mkdir D:\批次練習
+cd D:\批次練習
+
+# 2. 建立測試檔案
+1..3 | % { "# 測試 $_" | Out-File "file$_.md" -Encoding UTF8 }
+
+# 3. 批次轉換
+gci *.md | % { pandoc $_.Name -o ($_.BaseName + ".docx") }
+
+# 4. 確認結果
+gci
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 22: 總結 -->
+        <div class="slide">
+            <div class="slide-number">22 / 22</div>
+            <h2>本單元總結</h2>
+            <div class="highlight">
+                <h3 style="color: white;">你學會了：</h3>
+                <ul style="color: white;">
+                    <li>使用 Get-ChildItem 取得檔案清單</li>
+                    <li>使用 ForEach-Object 迴圈處理</li>
+                    <li>批次轉換多個 Markdown 檔案</li>
+                    <li>篩選特定檔案進行轉換</li>
+                </ul>
+            </div>
+            <div class="success-box">
+                <h3>核心指令</h3>
+                <div class="code-block">
+gci *.md | % { pandoc $_.Name -o ($_.BaseName + ".docx") }
+                </div>
+            </div>
+            <p style="text-align: center; margin-top: 30px;">
+                下一單元：建立自動化腳本 📜
+            </p>
+        </div>
+
+        <div class="nav-buttons">
+            <button class="nav-btn prev" onclick="prevSlide()" id="prevBtn">← 上一頁</button>
+            <button class="nav-btn next" onclick="nextSlide()" id="nextBtn">下一頁 →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const progress = document.getElementById('progress');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            progress.style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
+
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === totalSlides - 1;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                showSlide(currentSlide + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        function unlock() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === '0207') {
+                document.getElementById('lockedContent').classList.remove('locked-content');
+                document.getElementById('unlockForm').style.display = 'none';
+            } else {
+                alert('密碼錯誤！');
+            }
+        }
+
+        showSlide(0);
+    </script>
+</body>
+</html>

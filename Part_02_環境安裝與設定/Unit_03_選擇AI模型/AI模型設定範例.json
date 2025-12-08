@@ -1,0 +1,39 @@
+{
+    "// 說明": "這是 Antigravity AI 模型設定的範例檔案",
+    "// 注意": "實際設定請在 Antigravity 的 Settings 中進行",
+
+    "antigravity.ai.defaultModel": "gemini-3-pro",
+
+    "antigravity.ai.models": {
+        "gemini-3-pro": {
+            "name": "Gemini 3 Pro",
+            "provider": "google",
+            "description": "預設模型，免費額度大方",
+            "requiresApiKey": false,
+            "recommended": true
+        },
+        "claude-sonnet-4.5": {
+            "name": "Claude Sonnet 4.5",
+            "provider": "anthropic",
+            "description": "速度與品質平衡",
+            "requiresApiKey": true
+        },
+        "claude-opus-4.5": {
+            "name": "Claude Opus 4.5",
+            "provider": "anthropic",
+            "description": "最強推理能力，支援 Extended Thinking",
+            "requiresApiKey": true
+        },
+        "gpt-oss": {
+            "name": "GPT-OSS",
+            "provider": "openai",
+            "description": "開源模型變體",
+            "requiresApiKey": true
+        }
+    },
+
+    "// API Key 設定位置": "Settings > Extensions > Antigravity",
+
+    "antigravity.anthropic.apiKey": "sk-ant-xxxxxxxx（請填入你的 API Key）",
+    "antigravity.openai.apiKey": "sk-xxxxxxxx（請填入你的 API Key）"
+}

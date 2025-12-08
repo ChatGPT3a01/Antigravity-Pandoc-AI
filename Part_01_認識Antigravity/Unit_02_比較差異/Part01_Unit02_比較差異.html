@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 01 Unit 02 - 與 VS Code / Cursor 比較差異</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #333;
+        }
+        .nav-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .nav-title { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .nav-buttons { display: flex; gap: 12px; }
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.4); transform: translateY(-2px); }
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.25);
+            color: white;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 9000;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-arrow:hover { background: rgba(255,255,255,0.5); transform: translateY(-50%) scale(1.1); }
+        .prev-arrow { left: 30px; }
+        .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .slide-container { width: 100%; height: 100vh; padding-top: 60px; position: relative; z-index: 1; }
+        .slide {
+            position: absolute;
+            top: 60px; left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 10;
+        }
+        .slide.active { display: flex; opacity: 1; z-index: 20; }
+        .content-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            padding: 60px;
+            max-width: 1400px;
+            width: 95%;
+            max-height: 88vh;
+            overflow-y: auto;
+        }
+        .slide.locked .content-card { filter: blur(8px); pointer-events: none; user-select: none; }
+        .unlock-overlay-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            pointer-events: none;
+        }
+        .slide.locked .unlock-overlay-container { display: flex; }
+        .unlock-btn {
+            background: rgba(30, 60, 114, 0.95);
+            color: white;
+            border: 2px solid white;
+            padding: 15px 40px;
+            font-size: 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            transition: transform 0.2s;
+            pointer-events: auto !important;
+        }
+        .unlock-btn:hover { transform: scale(1.1); background: #2a5298; }
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+            backdrop-filter: blur(5px);
+        }
+        .modal-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 450px;
+        }
+        .modal-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .modal-input:focus { border-color: #1e3c72; outline: none; }
+        .modal-btn {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        h1 { color: #1e3c72; font-size: 56px; margin-bottom: 24px; text-align: center; }
+        h2 { color: #2a5298; font-size: 38px; margin-bottom: 35px; border-bottom: 3px solid #1e3c72; padding-bottom: 12px; }
+        h3 { color: #1e3c72; font-size: 26px; margin: 30px 0 15px 0; }
+        p, li { font-size: 20px; line-height: 1.8; color: #444; margin-bottom: 15px; }
+        code { background: #f0f2f5; padding: 3px 8px; border-radius: 6px; font-family: monospace; color: #d63384; font-weight: 600; }
+        pre { background: #282c34; color: #abb2bf; padding: 25px; border-radius: 12px; overflow-x: auto; margin: 25px 0; font-size: 18px; line-height: 1.6; }
+        .box { padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 6px solid; font-size: 20px; }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .highlight { background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #004d40; }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 30px; }
+        .concept-card { background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px solid #e9ecef; transition: transform 0.3s; }
+        .concept-card:hover { transform: translateY(-8px); border-color: #4facfe; }
+        .quiz-container { background: linear-gradient(145deg, #ffffff, #f0f4f8); border: 2px solid #1e3c72; border-radius: 20px; padding: 40px; margin: 30px 0; }
+        .quiz-btn { background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .quiz-btn:hover { transform: scale(1.05); }
+        .indicators { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 4000; padding: 10px 25px; background: rgba(0,0,0,0.3); border-radius: 30px; }
+        .dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
+        .dot.active { background: #4facfe; transform: scale(1.3); }
+        .step-box { background: #f8f9fa; border-radius: 15px; padding: 25px; margin: 20px 0; border-left: 5px solid #4facfe; }
+        .step-number { display: inline-block; background: #1e3c72; color: white; width: 40px; height: 40px; border-radius: 50%; text-align: center; line-height: 40px; font-weight: bold; margin-right: 15px; }
+        .feature-icon { font-size: 48px; margin-bottom: 15px; }
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .comparison-table th, .comparison-table td { padding: 15px; border: 1px solid #ddd; text-align: center; }
+        .comparison-table th { background: #1e3c72; color: white; }
+        .comparison-table tr:nth-child(even) { background: #f8f9fa; }
+        .vs-card { background: linear-gradient(145deg, #f8f9fa, #e9ecef); border-radius: 20px; padding: 30px; margin: 20px 0; border: 2px solid #dee2e6; }
+        .vs-header { display: flex; justify-content: space-around; align-items: center; margin-bottom: 20px; }
+        .vs-item { text-align: center; }
+        .vs-vs { font-size: 36px; font-weight: bold; color: #1e3c72; }
+        .winner { background: #d4edda; border-color: #28a745; }
+        .loser { background: #f8d7da; border-color: #dc3545; }
+        .tie { background: #fff3cd; border-color: #ffc107; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <div class="nav-title">Part 01 Unit 02 - 與 VS Code / Cursor 比較差異</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-btn" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-btn">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-btn">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container">
+
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <div class="content-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h4 style="color: #4facfe; letter-spacing: 2px; margin-bottom: 10px;">Part 01 - 認識 Google Antigravity</h4>
+                <h1>Unit 02: 比較差異</h1>
+                <h2 style="border: none; font-weight: normal; font-size: 28px; color: #666; max-width: 800px;">
+                    Antigravity vs VS Code vs Cursor：選擇最適合你的工具
+                </h2>
+                <div style="margin-top: 40px; display: flex; gap: 20px;">
+                    <span class="highlight">比較分析</span>
+                    <span class="highlight">優缺點</span>
+                    <span class="highlight">選擇建議</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: 學習目標 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>本單元學習目標</h2>
+                <p>完成本單元後，你將能夠：</p>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">1️⃣</div>
+                        <h3>理解差異</h3>
+                        <p>清楚了解 Antigravity、VS Code、Cursor 三者的核心差異</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">2️⃣</div>
+                        <h3>評估優缺點</h3>
+                        <p>知道每個工具的強項與弱點</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">3️⃣</div>
+                        <h3>做出選擇</h3>
+                        <p>根據自己的需求選擇最適合的工具</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">4️⃣</div>
+                        <h3>了解定位</h3>
+                        <p>明白這些工具在 AI 輔助開發領域的定位</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 三大選手介紹 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>三大 AI 編輯器介紹</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">🟦</div>
+                        <h3>VS Code + Copilot</h3>
+                        <p><strong>Microsoft</strong><br>傳統編輯器 + AI 外掛<br>市佔率最高</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🟪</div>
+                        <h3>Cursor</h3>
+                        <p><strong>Anysphere</strong><br>AI-Native 編輯器<br>2024 年爆紅</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🟩</div>
+                        <h3>Antigravity</h3>
+                        <p><strong>Google</strong><br>Agent-First 編輯器<br>2025 年最新</p>
+                    </div>
+                </div>
+                <div class="box info">
+                    <strong>重點：</strong>這三個工具代表了 AI 輔助開發的不同階段與思維方式
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: VS Code + Copilot 詳細介紹 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>VS Code + GitHub Copilot</h2>
+                <div class="step-box">
+                    <p>最傳統的 AI 輔助開發方式：<strong>編輯器 + AI 外掛</strong></p>
+                </div>
+                <h3>運作方式</h3>
+                <ul>
+                    <li>📝 你打字時，Copilot 會即時提供程式碼建議</li>
+                    <li>💬 你可以在 Chat 面板問問題</li>
+                    <li>🔧 你還是主要的「動手者」，AI 只是輔助</li>
+                </ul>
+                <h3>費用</h3>
+                <ul>
+                    <li>VS Code：免費</li>
+                    <li>GitHub Copilot：$10/月 或 $100/年</li>
+                    <li>Copilot Business：$19/月</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 5: Cursor 詳細介紹 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Cursor</h2>
+                <div class="step-box">
+                    <p>AI-Native 編輯器：<strong>為 AI 而生的編輯器</strong></p>
+                </div>
+                <h3>運作方式</h3>
+                <ul>
+                    <li>🎯 整個編輯器都圍繞 AI 設計</li>
+                    <li>📂 可以選取程式碼直接讓 AI 修改</li>
+                    <li>💬 對話可以直接參考整個專案</li>
+                    <li>⌨️ Cmd+K 快速呼叫 AI 修改程式碼</li>
+                </ul>
+                <h3>費用</h3>
+                <ul>
+                    <li>Hobby：免費（有限制）</li>
+                    <li>Pro：$20/月</li>
+                    <li>Business：$40/月</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 6: Antigravity 詳細介紹 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Google Antigravity</h2>
+                <div class="step-box">
+                    <p>Agent-First 編輯器：<strong>AI 代理自主完成任務</strong></p>
+                </div>
+                <h3>運作方式</h3>
+                <ul>
+                    <li>🤖 你給任務，Agent 自己規劃、執行</li>
+                    <li>👥 多個 Agent 可以同時工作</li>
+                    <li>🌐 Agent 會自己開瀏覽器測試</li>
+                    <li>⌨️ Agent 會自己在終端機執行指令</li>
+                </ul>
+                <h3>費用</h3>
+                <ul>
+                    <li>目前：<span class="highlight">免費</span>（公開預覽版）</li>
+                    <li>Gemini 3 Pro：大方免費額度</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 7: 核心差異比較表 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>核心差異比較表</h2>
+                <table class="comparison-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>VS Code + Copilot</th>
+                        <th>Cursor</th>
+                        <th>Antigravity</th>
+                    </tr>
+                    <tr>
+                        <td><strong>AI 角色</strong></td>
+                        <td>輔助者</td>
+                        <td>協作者</td>
+                        <td>執行者</td>
+                    </tr>
+                    <tr>
+                        <td><strong>主導權</strong></td>
+                        <td>人類主導</td>
+                        <td>人 AI 共同</td>
+                        <td>AI 可自主</td>
+                    </tr>
+                    <tr>
+                        <td><strong>多任務</strong></td>
+                        <td>❌</td>
+                        <td>❌</td>
+                        <td>✅ 多 Agent</td>
+                    </tr>
+                    <tr>
+                        <td><strong>瀏覽器整合</strong></td>
+                        <td>❌</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td><strong>價格</strong></td>
+                        <td>$10-19/月</td>
+                        <td>$0-40/月</td>
+                        <td>免費（預覽）</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 8: AI 角色差異 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>AI 角色差異：輔助 vs 協作 vs 執行</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">👨‍💻</div>
+                        <h3>VS Code + Copilot</h3>
+                        <p><strong>「AI 是我的助手」</strong></p>
+                        <p>你在打字，AI 提供建議<br>你決定要不要採納</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🤝</div>
+                        <h3>Cursor</h3>
+                        <p><strong>「AI 是我的隊友」</strong></p>
+                        <p>你說想要什麼<br>AI 幫你修改程式碼</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>Antigravity</h3>
+                        <p><strong>「AI 是我的員工」</strong></p>
+                        <p>你交代任務<br>Agent 自己完成所有事</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: 比較 - 程式碼補全 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>比較 1：程式碼補全能力</h2>
+                <div class="vs-card">
+                    <div class="vs-header">
+                        <div class="vs-item">🟦 VS Code</div>
+                        <div class="vs-vs">VS</div>
+                        <div class="vs-item">🟪 Cursor</div>
+                        <div class="vs-vs">VS</div>
+                        <div class="vs-item">🟩 Antigravity</div>
+                    </div>
+                </div>
+                <table class="comparison-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>VS Code</th>
+                        <th>Cursor</th>
+                        <th>Antigravity</th>
+                    </tr>
+                    <tr>
+                        <td>即時補全</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐</td>
+                    </tr>
+                    <tr>
+                        <td>多行補全</td>
+                        <td>⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐</td>
+                    </tr>
+                </table>
+                <div class="box info">
+                    <strong>結論：</strong>單純程式碼補全，三者差異不大，Cursor 稍微領先
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: 比較 - 整體修改能力 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>比較 2：整體修改能力</h2>
+                <p>讓 AI 一次修改多個檔案或大段程式碼的能力</p>
+                <table class="comparison-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>VS Code</th>
+                        <th>Cursor</th>
+                        <th>Antigravity</th>
+                    </tr>
+                    <tr>
+                        <td>單檔修改</td>
+                        <td>⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                    </tr>
+                    <tr>
+                        <td>多檔修改</td>
+                        <td>⭐⭐</td>
+                        <td>⭐⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                    </tr>
+                    <tr>
+                        <td>專案重構</td>
+                        <td>⭐</td>
+                        <td>⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                    </tr>
+                </table>
+                <div class="box success">
+                    <strong>結論：</strong>Antigravity 的 Agent 架構在大規模修改上有明顯優勢
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: 比較 - 自動化能力 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>比較 3：自動化執行能力</h2>
+                <p>AI 能否自己執行指令、測試、驗證</p>
+                <table class="comparison-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>VS Code</th>
+                        <th>Cursor</th>
+                        <th>Antigravity</th>
+                    </tr>
+                    <tr>
+                        <td>執行終端機指令</td>
+                        <td>❌</td>
+                        <td>⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                    </tr>
+                    <tr>
+                        <td>操作瀏覽器</td>
+                        <td>❌</td>
+                        <td>❌</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                    </tr>
+                    <tr>
+                        <td>自動測試</td>
+                        <td>❌</td>
+                        <td>⭐⭐</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                    </tr>
+                </table>
+                <div class="box success">
+                    <strong>結論：</strong>自動化是 Antigravity 最大的優勢！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: 比較 - 學習曲線 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>比較 4：學習曲線</h2>
+                <p>從零開始到上手需要的時間</p>
+                <table class="comparison-table">
+                    <tr>
+                        <th>工具</th>
+                        <th>如果會 VS Code</th>
+                        <th>完全新手</th>
+                    </tr>
+                    <tr>
+                        <td>VS Code + Copilot</td>
+                        <td>⭐ (5 分鐘)</td>
+                        <td>⭐⭐⭐ (1-2 天)</td>
+                    </tr>
+                    <tr>
+                        <td>Cursor</td>
+                        <td>⭐⭐ (30 分鐘)</td>
+                        <td>⭐⭐⭐ (1-2 天)</td>
+                    </tr>
+                    <tr>
+                        <td>Antigravity</td>
+                        <td>⭐ (10 分鐘)</td>
+                        <td>⭐⭐⭐ (1-2 天)</td>
+                    </tr>
+                </table>
+                <div class="box info">
+                    <strong>結論：</strong>三者都基於 VS Code 架構，學習曲線差異不大
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: 比較 - 價格 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>比較 5：價格成本</h2>
+                <table class="comparison-table">
+                    <tr>
+                        <th>工具</th>
+                        <th>免費方案</th>
+                        <th>付費方案</th>
+                    </tr>
+                    <tr>
+                        <td>VS Code + Copilot</td>
+                        <td>VS Code 免費<br>Copilot 無免費</td>
+                        <td>$10-19/月</td>
+                    </tr>
+                    <tr>
+                        <td>Cursor</td>
+                        <td>有（限制較多）</td>
+                        <td>$20-40/月</td>
+                    </tr>
+                    <tr>
+                        <td style="background: #d4edda;">Antigravity</td>
+                        <td style="background: #d4edda;"><strong>完全免費</strong><br>(公開預覽版)</td>
+                        <td style="background: #d4edda;">尚未公布</td>
+                    </tr>
+                </table>
+                <div class="box success">
+                    <strong>目前最佳選擇：</strong>Antigravity 免費且功能最強！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: 優點比較 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>各工具優點總整理</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">🟦</div>
+                        <h3>VS Code + Copilot 優點</h3>
+                        <ul>
+                            <li>✅ 最穩定、市佔率最高</li>
+                            <li>✅ 擴充套件生態系完整</li>
+                            <li>✅ 企業支援完善</li>
+                            <li>✅ 適合保守型開發者</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🟪</div>
+                        <h3>Cursor 優點</h3>
+                        <ul>
+                            <li>✅ AI 整合最流暢</li>
+                            <li>✅ 選取即修改很直覺</li>
+                            <li>✅ 專案理解能力強</li>
+                            <li>✅ 社群活躍度高</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card" style="grid-column: span 2;">
+                        <div class="feature-icon">🟩</div>
+                        <h3>Antigravity 優點</h3>
+                        <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <li>✅ Agent 自主執行任務</li>
+                            <li>✅ 多 Agent 平行處理</li>
+                            <li>✅ 瀏覽器整合測試</li>
+                            <li>✅ Gemini 3 免費額度大</li>
+                            <li>✅ 支援多種 AI 模型</li>
+                            <li>✅ Google 背書支持</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: 缺點比較 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>各工具缺點總整理</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">🟦</div>
+                        <h3>VS Code + Copilot 缺點</h3>
+                        <ul>
+                            <li>❌ AI 功能較基礎</li>
+                            <li>❌ 無法自動執行任務</li>
+                            <li>❌ 需要付費才好用</li>
+                            <li>❌ 多檔修改能力弱</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🟪</div>
+                        <h3>Cursor 缺點</h3>
+                        <ul>
+                            <li>❌ Pro 版價格較高</li>
+                            <li>❌ 無瀏覽器整合</li>
+                            <li>❌ 無多代理功能</li>
+                            <li>❌ 新創公司風險</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card" style="grid-column: span 2;">
+                        <div class="feature-icon">🟩</div>
+                        <h3>Antigravity 缺點</h3>
+                        <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <li>⚠️ 還在預覽版，可能有 bug</li>
+                            <li>⚠️ 未來定價不明</li>
+                            <li>⚠️ 社群資源較少</li>
+                            <li>⚠️ Agent 有時會「想太多」</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: 適用場景 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>什麼情況用什麼工具？</h2>
+                <div class="step-box">
+                    <p><span class="step-number">🟦</span><strong>選 VS Code + Copilot</strong></p>
+                    <ul>
+                        <li>公司規定只能用這個</li>
+                        <li>需要穩定、企業級支援</li>
+                        <li>已經有很多 VS Code 設定</li>
+                    </ul>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">🟪</span><strong>選 Cursor</strong></p>
+                    <ul>
+                        <li>喜歡「選取 + 修改」的工作流程</li>
+                        <li>願意付費獲得更好體驗</li>
+                        <li>不需要太多自動化</li>
+                    </ul>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">🟩</span><strong>選 Antigravity</strong></p>
+                    <ul>
+                        <li>想要 AI 自動完成整個任務</li>
+                        <li>需要批次處理、自動化</li>
+                        <li>想免費使用強大功能</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: 測驗 1 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 1</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>以下哪一個工具可以讓 AI 自動操作瀏覽器進行測試？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li>VS Code + Copilot</li>
+                        <li>Cursor</li>
+                        <li>Antigravity</li>
+                        <li>以上皆可</li>
+                    </ol>
+                    <hr style="margin: 20px 0;">
+                    <button class="quiz-btn" onclick="openPasswordModal(17)">
+                        🔑 查看解答
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18: 測驗 1 解答 -->
+        <div class="slide locked" id="slide-17">
+            <div class="content-card">
+                <h2>✅ 測驗 1 解答</h2>
+                <div class="box success">
+                    <h3>答案：(3) Antigravity</h3>
+                    <p><strong>解釋：</strong>瀏覽器整合是 Antigravity 的獨有功能。VS Code + Copilot 和 Cursor 目前都不支援讓 AI 自動操作瀏覽器。</p>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(17)">🔓 點擊解鎖解答</button>
+            </div>
+        </div>
+
+        <!-- Slide 19: 測驗 2 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 2</h2>
+                <div class="quiz-container">
+                    <p><strong>情境題：</strong>小明是一位自由工作者，想要免費使用 AI 輔助開發工具。他經常需要一次修改多個檔案，而且希望 AI 可以自己跑測試。</p>
+                    <p><strong>問題：</strong>小明應該選擇哪個工具？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li>VS Code + Copilot</li>
+                        <li>Cursor</li>
+                        <li>Antigravity</li>
+                    </ol>
+                    <hr style="margin: 20px 0;">
+                    <button class="quiz-btn" onclick="openPasswordModal(19)">
+                        🔑 查看解答
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 20: 測驗 2 解答 -->
+        <div class="slide locked" id="slide-19">
+            <div class="content-card">
+                <h2>✅ 測驗 2 解答</h2>
+                <div class="box success">
+                    <h3>答案：(3) Antigravity</h3>
+                    <p><strong>解釋：</strong></p>
+                    <ul>
+                        <li>✅ 免費（公開預覽版）</li>
+                        <li>✅ 多檔修改能力強（Agent 架構）</li>
+                        <li>✅ 可以自動跑測試（瀏覽器整合）</li>
+                    </ul>
+                    <p>完全符合小明的需求！</p>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(19)">🔓 點擊解鎖解答</button>
+            </div>
+        </div>
+
+        <!-- Slide 21: 為什麼選 Antigravity -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>為什麼本課程選擇 Antigravity？</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">💰</div>
+                        <h3>免費使用</h3>
+                        <p>預覽版完全免費，學習零負擔</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>Agent 自動化</h3>
+                        <p>可以讓 AI 自動執行 Pandoc 指令</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🌐</div>
+                        <h3>瀏覽器整合</h3>
+                        <p>可以即時預覽轉換結果</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">📈</div>
+                        <h3>未來趨勢</h3>
+                        <p>Agent 架構是 AI 開發的未來方向</p>
+                    </div>
+                </div>
+                <div class="box success">
+                    <strong>結論：</strong>Antigravity 是學習「AI + Pandoc 自動化」的最佳選擇！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 22: Part 01 總結 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Part 01 完整總結</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">📚</div>
+                        <h3>Unit 01 回顧</h3>
+                        <p>認識 Antigravity 基本概念：Agent-First、多代理、瀏覽器整合</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">⚔️</div>
+                        <h3>Unit 02 回顧</h3>
+                        <p>比較三大工具差異，了解各自優缺點與適用場景</p>
+                    </div>
+                </div>
+                <div class="box info" style="margin-top: 30px;">
+                    <h3>下一步：Part 02</h3>
+                    <p>接下來我們將<strong>實際安裝 Antigravity</strong>，並完成環境設定！</p>
+                </div>
+                <div class="box success">
+                    <strong>恭喜完成 Part 01！</strong>你已經對 Google Antigravity 有了完整的認識！
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-box">
+            <h2 style="color: #1e3c72; margin-bottom: 10px;">🔒 解鎖解答</h2>
+            <p style="color: #666;">請輸入密碼以查看隱藏內容</p>
+            <input type="password" class="modal-input" id="passwordInput" placeholder="請輸入密碼" autocomplete="off">
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button class="modal-btn" onclick="verifyPassword()">確認</button>
+                <button class="modal-btn" style="background: #999;" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let unlockedSlides = new Set();
+        let pendingUnlockIndex = -1;
+        const CORRECT_PASSWORD = "0207";
+
+        function init() {
+            createIndicators();
+            showSlide(0);
+            updateButtons();
+            document.addEventListener('keydown', handleKeydown);
+        }
+
+        function handleKeydown(e) {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'Enter' && document.getElementById('passwordModal').style.display === 'flex') {
+                verifyPassword();
+            }
+        }
+
+        function createIndicators() {
+            const container = document.getElementById('indicatorContainer');
+            container.innerHTML = '';
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.onclick = () => goToSlide(index);
+                container.appendChild(dot);
+            });
+        }
+
+        function showSlide(index) {
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            if (slides[index].classList.contains('locked') && !unlockedSlides.has(index)) {
+            } else {
+                slides[index].classList.remove('locked');
+            }
+            currentSlide = index;
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, idx) => dot.classList.toggle('active', idx === index));
+            updateButtons();
+        }
+
+        function changeSlide(direction) { showSlide(currentSlide + direction); }
+        function goToSlide(index) { showSlide(index); }
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else if (document.exitFullscreen) document.exitFullscreen();
+        }
+        function openPasswordModal(targetIndex) {
+            pendingUnlockIndex = targetIndex;
+            document.getElementById('passwordModal').style.display = 'flex';
+            const input = document.getElementById('passwordInput');
+            input.value = '';
+            input.focus();
+        }
+        function closeModal() { document.getElementById('passwordModal').style.display = 'none'; }
+        function verifyPassword() {
+            const input = document.getElementById('passwordInput');
+            if (input.value === CORRECT_PASSWORD) {
+                unlockedSlides.add(pendingUnlockIndex);
+                if (currentSlide === pendingUnlockIndex) slides[currentSlide].classList.remove('locked');
+                else showSlide(pendingUnlockIndex);
+                closeModal();
+            } else {
+                alert("❌ 密碼錯誤！");
+                input.value = '';
+                input.focus();
+            }
+        }
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 03 Unit 03 - 常見錯誤與解決方案</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; overflow: hidden; color: #333; }
+        .nav-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; z-index: 10000; }
+        .nav-title { font-size: 22px; font-weight: 700; color: #fff; }
+        .nav-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .nav-arrow { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.25); color: white; width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); font-size: 24px; cursor: pointer; z-index: 9000; display: flex; align-items: center; justify-content: center; }
+        .prev-arrow { left: 30px; } .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; }
+        .slide-container { width: 100%; height: 100vh; padding-top: 60px; }
+        .slide { position: absolute; top: 60px; left: 0; width: 100%; height: calc(100vh - 60px); display: none; align-items: center; justify-content: center; padding: 40px; opacity: 0; transition: opacity 0.4s; }
+        .slide.active { display: flex; opacity: 1; z-index: 20; }
+        .content-card { background: rgba(255,255,255,0.98); border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); padding: 60px; max-width: 1400px; width: 95%; max-height: 88vh; overflow-y: auto; }
+        .slide.locked .content-card { filter: blur(8px); pointer-events: none; }
+        .unlock-overlay-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; z-index: 50; }
+        .slide.locked .unlock-overlay-container { display: flex; }
+        .unlock-btn { background: rgba(30,60,114,0.95); color: white; border: 2px solid white; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; pointer-events: auto; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 20000; }
+        .modal-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; }
+        .modal-input { width: 100%; padding: 15px; font-size: 20px; border: 2px solid #e0e0e0; border-radius: 12px; margin: 20px 0; text-align: center; }
+        .modal-btn { background: #1e3c72; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-size: 18px; cursor: pointer; margin: 5px; }
+        h1 { color: #1e3c72; font-size: 56px; margin-bottom: 24px; text-align: center; }
+        h2 { color: #2a5298; font-size: 38px; margin-bottom: 35px; border-bottom: 3px solid #1e3c72; padding-bottom: 12px; }
+        h3 { color: #1e3c72; font-size: 26px; margin: 30px 0 15px 0; }
+        p, li { font-size: 20px; line-height: 1.8; color: #444; margin-bottom: 15px; }
+        code { background: #f0f2f5; padding: 3px 8px; border-radius: 6px; font-family: 'Consolas', monospace; color: #d63384; font-weight: 600; }
+        pre { background: #282c34; color: #abb2bf; padding: 25px; border-radius: 12px; margin: 25px 0; font-size: 18px; line-height: 1.6; }
+        .box { padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 6px solid; font-size: 20px; }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .error { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        .highlight { background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #004d40; }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 30px; }
+        .concept-card { background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px solid #e9ecef; }
+        .quiz-container { background: linear-gradient(145deg, #fff, #f0f4f8); border: 2px solid #1e3c72; border-radius: 20px; padding: 40px; margin: 30px 0; }
+        .quiz-btn { background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .indicators { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 4000; padding: 10px 25px; background: rgba(0,0,0,0.3); border-radius: 30px; }
+        .dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
+        .dot.active { background: #4facfe; transform: scale(1.3); }
+        .step-box { background: #f8f9fa; border-radius: 15px; padding: 25px; margin: 20px 0; border-left: 5px solid #4facfe; }
+        .feature-icon { font-size: 48px; margin-bottom: 15px; }
+        .command-box { background: #1e1e1e; color: #4ec9b0; padding: 20px; border-radius: 10px; font-family: 'Consolas', monospace; font-size: 18px; margin: 15px 0; }
+        .error-box { background: #2d2d2d; border: 2px solid #e74c3c; border-radius: 10px; padding: 20px; margin: 15px 0; font-family: 'Consolas', monospace; }
+        .error-box .error-msg { color: #e74c3c; }
+        .solution-box { background: #e8f5e9; border: 2px solid #27ae60; border-radius: 10px; padding: 20px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <div class="nav-title">Part 03 Unit 03 - 常見錯誤與解決方案</div>
+        <div class="nav-buttons" style="display: flex; gap: 12px;">
+            <button class="nav-btn" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-btn" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-btn">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-btn">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container">
+
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <div class="content-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h4 style="color: #4facfe; letter-spacing: 2px; margin-bottom: 10px;">Part 03 - Pandoc 安裝與基礎轉換</h4>
+                <h1>Unit 03: 常見錯誤</h1>
+                <h2 style="border: none; font-weight: normal; font-size: 28px; color: #666;">
+                    遇到問題別慌！這裡有解答
+                </h2>
+                <div style="margin-top: 40px; display: flex; gap: 20px;">
+                    <span class="highlight">疑難排解</span>
+                    <span class="highlight">錯誤訊息</span>
+                    <span class="highlight">解決方案</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: 學習目標 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>本單元學習目標</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">1️⃣</div>
+                        <h3>識別錯誤訊息</h3>
+                        <p>看懂 Pandoc 的錯誤提示</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">2️⃣</div>
+                        <h3>解決常見問題</h3>
+                        <p>學會處理最常遇到的錯誤</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">3️⃣</div>
+                        <h3>預防錯誤</h3>
+                        <p>養成好習慣，避免錯誤發生</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">4️⃣</div>
+                        <h3">自我排解</h3>
+                        <p>學會獨立解決問題的方法</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 錯誤 1 - 找不到 pandoc -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>錯誤 1：找不到 pandoc 指令</h2>
+                <div class="error-box">
+                    <span class="error-msg">'pandoc' is not recognized as an internal or external command</span>
+                </div>
+                <p>或</p>
+                <div class="error-box">
+                    <span class="error-msg">pandoc: command not found</span>
+                </div>
+                <h3>原因</h3>
+                <ul>
+                    <li>Pandoc 尚未安裝</li>
+                    <li>安裝後沒有重新開啟終端機</li>
+                    <li>Pandoc 沒有加入系統 PATH</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 4: 錯誤 1 解決方案 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>錯誤 1 解決方案</h2>
+                <div class="solution-box">
+                    <h3>✅ 解決步驟</h3>
+                    <div class="step-box">
+                        <p><strong>步驟 1：</strong>關閉所有終端機視窗</p>
+                    </div>
+                    <div class="step-box">
+                        <p><strong>步驟 2：</strong>重新開啟 Antigravity</p>
+                    </div>
+                    <div class="step-box">
+                        <p><strong>步驟 3：</strong>開啟新的終端機，再試一次 <code>pandoc --version</code></p>
+                    </div>
+                    <div class="step-box">
+                        <p><strong>步驟 4：</strong>如果還是不行，重新安裝 Pandoc</p>
+                    </div>
+                </div>
+                <div class="box info">
+                    <strong>關鍵：</strong>安裝後一定要重新開啟終端機！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 錯誤 2 - 找不到檔案 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>錯誤 2：找不到輸入檔案</h2>
+                <div class="error-box">
+                    <span class="error-msg">pandoc: sample.md: openFile: does not exist (No such file or directory)</span>
+                </div>
+                <h3>原因</h3>
+                <ul>
+                    <li>檔案名稱打錯</li>
+                    <li>檔案不在目前的資料夾</li>
+                    <li>檔案副檔名錯誤（例如 .txt 打成 .md）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 6: 錯誤 2 解決方案 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>錯誤 2 解決方案</h2>
+                <div class="solution-box">
+                    <h3>✅ 解決步驟</h3>
+                    <div class="step-box">
+                        <p><strong>步驟 1：</strong>確認檔案名稱正確</p>
+                        <div class="command-box">dir *.md　　<span style="color: #6a9955;"># Windows</span><br>ls *.md　　　<span style="color: #6a9955;"># Mac/Linux</span></div>
+                    </div>
+                    <div class="step-box">
+                        <p><strong>步驟 2：</strong>確認終端機在正確的資料夾</p>
+                        <div class="command-box">pwd　　<span style="color: #6a9955;"># 顯示目前資料夾</span></div>
+                    </div>
+                    <div class="step-box">
+                        <p><strong>步驟 3：</strong>使用 Tab 鍵自動補全檔名</p>
+                    </div>
+                </div>
+                <div class="box success">
+                    <strong>技巧：</strong>輸入 <code>pandoc sam</code> 然後按 <code>Tab</code> 會自動補全成 <code>pandoc sample.md</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: 錯誤 3 - 空格檔名 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>錯誤 3：檔名含空格</h2>
+                <div class="error-box">
+                    <span class="error-msg">pandoc: my: openFile: does not exist</span>
+                </div>
+                <p>執行的指令：</p>
+                <div class="command-box" style="border: 2px solid #e74c3c;">
+                    pandoc my report.md -o my report.docx　<span style="color: #e74c3c;">❌ 錯誤</span>
+                </div>
+                <h3>原因</h3>
+                <p>空格會被解讀成參數分隔，所以 Pandoc 只看到 <code>my</code>，找不到這個檔案。</p>
+            </div>
+        </div>
+
+        <!-- Slide 8: 錯誤 3 解決方案 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>錯誤 3 解決方案</h2>
+                <div class="solution-box">
+                    <h3>✅ 正確寫法：用引號包起來</h3>
+                    <div class="command-box" style="border: 2px solid #27ae60;">
+                        pandoc <span style="color: #98c379;">"my report.md"</span> -o <span style="color: #98c379;">"my report.docx"</span>　<span style="color: #27ae60;">✅ 正確</span>
+                    </div>
+                </div>
+                <div class="box warning">
+                    <strong>最佳實踐：</strong>建議檔名不要用空格！用底線或連字號代替：
+                    <ul>
+                        <li><code>my_report.md</code> ✅</li>
+                        <li><code>my-report.md</code> ✅</li>
+                        <li><code>myReport.md</code> ✅</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: 錯誤 4 - 中文檔名 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>錯誤 4：中文檔名問題</h2>
+                <div class="error-box">
+                    <span class="error-msg">pandoc: 報告.md: openFile: does not exist</span>
+                </div>
+                <h3>原因</h3>
+                <ul>
+                    <li>終端機編碼問題</li>
+                    <li>某些系統對中文檔名支援不完整</li>
+                </ul>
+                <div class="solution-box">
+                    <h3>✅ 解決方案</h3>
+                    <ol>
+                        <li>用引號包起來：<code>pandoc "報告.md" -o "報告.docx"</code></li>
+                        <li>或改用英文檔名（推薦）</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: 錯誤 5 - 輸出檔被佔用 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>錯誤 5：輸出檔案被佔用</h2>
+                <div class="error-box">
+                    <span class="error-msg">pandoc: sample.docx: openBinaryFile: permission denied (Permission denied)</span>
+                </div>
+                <h3>原因</h3>
+                <p>輸出的 .docx 檔案正在 Word 中開啟，無法覆寫。</p>
+                <div class="solution-box">
+                    <h3>✅ 解決方案</h3>
+                    <ol>
+                        <li><strong>關閉 Word</strong> 中開啟的該檔案</li>
+                        <li>重新執行 Pandoc 指令</li>
+                    </ol>
+                </div>
+                <div class="box warning">
+                    <strong>提醒：</strong>轉換前先關閉相關的 Word 檔案！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: 錯誤 6 - 語法錯誤 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>錯誤 6：指令語法錯誤</h2>
+                <div class="error-box">
+                    <span class="error-msg">pandoc: unrecognized option '--output'</span>
+                </div>
+                <h3>常見語法錯誤</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <tr style="background: #f8d7da;">
+                        <th style="padding: 12px; border: 1px solid #ddd;">❌ 錯誤</th>
+                        <th style="padding: 12px; border: 1px solid #ddd;">✅ 正確</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #ddd;"><code>pandoc -o sample.md sample.docx</code></td>
+                        <td style="padding: 12px; border: 1px solid #ddd;"><code>pandoc sample.md -o sample.docx</code></td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px; border: 1px solid #ddd;"><code>pandoc --output sample.docx</code></td>
+                        <td style="padding: 12px; border: 1px solid #ddd;"><code>pandoc sample.md -o sample.docx</code></td>
+                    </tr>
+                </table>
+                <div class="box info">
+                    <strong>正確語法：</strong><code>pandoc [輸入檔] -o [輸出檔]</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: 除錯技巧 1 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>除錯技巧 1：使用 Tab 自動補全</h2>
+                <div class="step-box">
+                    <p><span style="font-size: 30px;">⌨️</span> 輸入部分檔名後按 <code>Tab</code> 鍵</p>
+                </div>
+                <div class="command-box">
+                    pandoc sam<span style="color: #ffc107;">[按 Tab]</span> → pandoc sample.md
+                </div>
+                <h3>好處</h3>
+                <ul>
+                    <li>✅ 自動補全正確的檔名</li>
+                    <li>✅ 避免打字錯誤</li>
+                    <li>✅ 確認檔案確實存在</li>
+                </ul>
+                <div class="box success">
+                    <strong>如果按 Tab 沒反應：</strong>表示找不到符合的檔案，檢查檔名或資料夾！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: 除錯技巧 2 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>除錯技巧 2：先列出檔案</h2>
+                <p>執行 Pandoc 前，先確認檔案存在：</p>
+                <h3>Windows (PowerShell)</h3>
+                <div class="command-box">
+                    dir　　　　　　<span style="color: #6a9955;"># 列出所有檔案</span><br>
+                    dir *.md　　　<span style="color: #6a9955;"># 只列出 .md 檔案</span>
+                </div>
+                <h3>macOS / Linux</h3>
+                <div class="command-box">
+                    ls　　　　　　<span style="color: #6a9955;"># 列出所有檔案</span><br>
+                    ls *.md　　　<span style="color: #6a9955;"># 只列出 .md 檔案</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: 除錯技巧 3 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>除錯技巧 3：讓 AI 幫忙</h2>
+                <p>遇到錯誤時，可以把錯誤訊息貼給 AI：</p>
+                <div class="step-box">
+                    <p><strong>在 AI 面板輸入：</strong></p>
+                    <div class="command-box" style="background: #e8f5e9; color: #2e7d32;">
+                        我執行 pandoc sample.md -o sample.docx 出現這個錯誤：<br>
+                        pandoc: sample.md: openFile: does not exist<br>
+                        請幫我解決
+                    </div>
+                </div>
+                <div class="box success">
+                    <strong>AI 會幫你：</strong>分析錯誤原因並提供解決步驟！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: 預防錯誤的好習慣 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>預防錯誤的好習慣</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">📝</div>
+                        <h3>1. 檔名用英文</h3>
+                        <p>避免中文和特殊字元</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">_</div>
+                        <h3>2. 不用空格</h3>
+                        <p>用底線 _ 或連字號 - 代替</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🔤</div>
+                        <h3>3. 全小寫</h3>
+                        <p>避免大小寫混淆</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">💾</div>
+                        <h3>4. 先儲存</h3>
+                        <p>轉換前確認檔案已儲存</p>
+                    </div>
+                </div>
+                <div class="box info">
+                    <strong>好檔名範例：</strong><code>project_report.md</code>、<code>meeting-notes.md</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: 錯誤速查表 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>錯誤速查表</h2>
+                <table style="width: 100%; border-collapse: collapse; font-size: 18px;">
+                    <tr style="background: #1e3c72; color: white;">
+                        <th style="padding: 12px;">錯誤訊息關鍵字</th>
+                        <th style="padding: 12px;">原因</th>
+                        <th style="padding: 12px;">解決方案</th>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px;">not recognized</td>
+                        <td style="padding: 12px;">Pandoc 未安裝/未載入</td>
+                        <td style="padding: 12px;">重開終端機或重新安裝</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;">does not exist</td>
+                        <td style="padding: 12px;">找不到檔案</td>
+                        <td style="padding: 12px;">檢查檔名和路徑</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px;">permission denied</td>
+                        <td style="padding: 12px;">檔案被佔用</td>
+                        <td style="padding: 12px;">關閉開啟該檔案的程式</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;">unrecognized option</td>
+                        <td style="padding: 12px;">參數錯誤</td>
+                        <td style="padding: 12px;">檢查指令語法</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 17: 測驗 1 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 1</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>檔名含有空格時，應該怎麼處理？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li>把空格刪掉</li>
+                        <li>用引號把檔名包起來</li>
+                        <li>用逗號代替空格</li>
+                        <li>無法處理，只能改檔名</li>
+                    </ol>
+                    <button class="quiz-btn" onclick="openPasswordModal(17)">🔑 查看解答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18: 測驗 1 解答 -->
+        <div class="slide locked" id="slide-17">
+            <div class="content-card">
+                <h2>✅ 測驗 1 解答</h2>
+                <div class="box success">
+                    <h3>答案：(2) 用引號把檔名包起來</h3>
+                    <p><strong>範例：</strong><code>pandoc "my report.md" -o "my report.docx"</code></p>
+                    <p>不過最好的做法是：一開始就不要用空格命名檔案！</p>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(17)">🔓 點擊解鎖</button>
+            </div>
+        </div>
+
+        <!-- Slide 19: 測驗 2 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 2</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>執行 <code>pandoc sample.md -o sample.docx</code> 出現「permission denied」錯誤，最可能的原因是？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li>Pandoc 沒有安裝</li>
+                        <li>sample.md 不存在</li>
+                        <li>sample.docx 正在 Word 中開啟</li>
+                        <li>電腦沒有網路</li>
+                    </ol>
+                    <button class="quiz-btn" onclick="openPasswordModal(19)">🔑 查看解答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 20: 測驗 2 解答 -->
+        <div class="slide locked" id="slide-19">
+            <div class="content-card">
+                <h2>✅ 測驗 2 解答</h2>
+                <div class="box success">
+                    <h3>答案：(3) sample.docx 正在 Word 中開啟</h3>
+                    <p><strong>解釋：</strong>「permission denied」表示無法寫入檔案，通常是因為該檔案正被其他程式（如 Word）佔用。關閉 Word 後重試即可。</p>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(19)">🔓 點擊解鎖</button>
+            </div>
+        </div>
+
+        <!-- Slide 21: Part 03 總結 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Part 03 完整總結</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">📥</div>
+                        <h3>Unit 01</h3>
+                        <p>成功安裝 Pandoc 並驗證</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>Unit 02</h3>
+                        <p>完成第一次 .md → .docx 轉換</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🔧</div>
+                        <h3>Unit 03</h3>
+                        <p>學會處理常見錯誤</p>
+                    </div>
+                </div>
+                <div class="box success" style="margin-top: 30px;">
+                    <h3>🎉 恭喜完成 Part 03！</h3>
+                    <p>你已經掌握 Pandoc 的基本操作！</p>
+                    <p><strong>下一步：Part 04</strong> - 在 Antigravity 中用 AI 輔助執行 Pandoc！</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-box">
+            <h2 style="color: #1e3c72;">🔒 解鎖解答</h2>
+            <input type="password" class="modal-input" id="passwordInput" placeholder="密碼">
+            <div>
+                <button class="modal-btn" onclick="verifyPassword()">確認</button>
+                <button class="modal-btn" style="background:#999" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide=0;const slides=document.querySelectorAll('.slide'),totalSlides=slides.length;let unlockedSlides=new Set(),pendingUnlockIndex=-1;const CORRECT_PASSWORD="0207";
+        function init(){createIndicators();showSlide(0);updateButtons();document.addEventListener('keydown',handleKeydown)}
+        function handleKeydown(e){if(e.key==='ArrowLeft')changeSlide(-1);if(e.key==='ArrowRight')changeSlide(1);if(e.key==='Enter'&&document.getElementById('passwordModal').style.display==='flex')verifyPassword()}
+        function createIndicators(){const c=document.getElementById('indicatorContainer');slides.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.onclick=()=>goToSlide(i);c.appendChild(d)})}
+        function showSlide(i){if(i<0)i=0;if(i>=totalSlides)i=totalSlides-1;slides.forEach(s=>s.classList.remove('active'));slides[i].classList.add('active');if(!slides[i].classList.contains('locked')||unlockedSlides.has(i))slides[i].classList.remove('locked');currentSlide=i;document.querySelectorAll('.dot').forEach((d,idx)=>d.classList.toggle('active',idx===i));updateButtons()}
+        function changeSlide(d){showSlide(currentSlide+d)}function goToSlide(i){showSlide(i)}
+        function updateButtons(){document.getElementById('prevBtn').disabled=currentSlide===0;document.getElementById('nextBtn').disabled=currentSlide===totalSlides-1}
+        function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else if(document.exitFullscreen)document.exitFullscreen()}
+        function openPasswordModal(i){pendingUnlockIndex=i;document.getElementById('passwordModal').style.display='flex';document.getElementById('passwordInput').value='';document.getElementById('passwordInput').focus()}
+        function closeModal(){document.getElementById('passwordModal').style.display='none'}
+        function verifyPassword(){if(document.getElementById('passwordInput').value===CORRECT_PASSWORD){unlockedSlides.add(pendingUnlockIndex);if(currentSlide===pendingUnlockIndex)slides[currentSlide].classList.remove('locked');else showSlide(pendingUnlockIndex);closeModal()}else{alert("❌ 密碼錯誤！");document.getElementById('passwordInput').value=''}}
+        init();
+    </script>
+</body>
+</html>

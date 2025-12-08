@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 03 Unit 02 - 第一次 Markdown 轉 Word</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; overflow: hidden; color: #333; }
+        .nav-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; z-index: 10000; }
+        .nav-title { font-size: 22px; font-weight: 700; color: #fff; }
+        .nav-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+        .nav-arrow { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.25); color: white; width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); font-size: 24px; cursor: pointer; z-index: 9000; display: flex; align-items: center; justify-content: center; }
+        .nav-arrow:hover { background: rgba(255,255,255,0.5); transform: translateY(-50%) scale(1.1); }
+        .prev-arrow { left: 30px; } .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; }
+        .slide-container { width: 100%; height: 100vh; padding-top: 60px; }
+        .slide { position: absolute; top: 60px; left: 0; width: 100%; height: calc(100vh - 60px); display: none; align-items: center; justify-content: center; padding: 40px; opacity: 0; transition: opacity 0.4s; }
+        .slide.active { display: flex; opacity: 1; z-index: 20; }
+        .content-card { background: rgba(255,255,255,0.98); border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); padding: 60px; max-width: 1400px; width: 95%; max-height: 88vh; overflow-y: auto; }
+        .slide.locked .content-card { filter: blur(8px); pointer-events: none; }
+        .unlock-overlay-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; z-index: 50; }
+        .slide.locked .unlock-overlay-container { display: flex; }
+        .unlock-btn { background: rgba(30,60,114,0.95); color: white; border: 2px solid white; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; pointer-events: auto; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 20000; }
+        .modal-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; }
+        .modal-input { width: 100%; padding: 15px; font-size: 20px; border: 2px solid #e0e0e0; border-radius: 12px; margin: 20px 0; text-align: center; }
+        .modal-btn { background: #1e3c72; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-size: 18px; cursor: pointer; margin: 5px; }
+        h1 { color: #1e3c72; font-size: 56px; margin-bottom: 24px; text-align: center; }
+        h2 { color: #2a5298; font-size: 38px; margin-bottom: 35px; border-bottom: 3px solid #1e3c72; padding-bottom: 12px; }
+        h3 { color: #1e3c72; font-size: 26px; margin: 30px 0 15px 0; }
+        p, li { font-size: 20px; line-height: 1.8; color: #444; margin-bottom: 15px; }
+        code { background: #f0f2f5; padding: 3px 8px; border-radius: 6px; font-family: 'Consolas', monospace; color: #d63384; font-weight: 600; }
+        pre { background: #282c34; color: #abb2bf; padding: 25px; border-radius: 12px; margin: 25px 0; font-size: 18px; line-height: 1.6; overflow-x: auto; }
+        .box { padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 6px solid; font-size: 20px; }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .highlight { background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #004d40; }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 30px; }
+        .concept-card { background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px solid #e9ecef; }
+        .quiz-container { background: linear-gradient(145deg, #fff, #f0f4f8); border: 2px solid #1e3c72; border-radius: 20px; padding: 40px; margin: 30px 0; }
+        .quiz-btn { background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .indicators { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 4000; padding: 10px 25px; background: rgba(0,0,0,0.3); border-radius: 30px; }
+        .dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
+        .dot.active { background: #4facfe; transform: scale(1.3); }
+        .step-box { background: #f8f9fa; border-radius: 15px; padding: 25px; margin: 20px 0; border-left: 5px solid #4facfe; }
+        .step-number { display: inline-block; background: #1e3c72; color: white; width: 40px; height: 40px; border-radius: 50%; text-align: center; line-height: 40px; font-weight: bold; margin-right: 15px; }
+        .feature-icon { font-size: 48px; margin-bottom: 15px; }
+        .command-box { background: #1e1e1e; color: #4ec9b0; padding: 20px; border-radius: 10px; font-family: 'Consolas', monospace; font-size: 18px; margin: 15px 0; }
+        .file-preview { background: #fff; border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; margin: 15px 0; font-family: 'Consolas', monospace; }
+        .file-tab { display: inline-block; background: #1e3c72; color: white; padding: 8px 20px; border-radius: 8px 8px 0 0; font-size: 14px; margin-bottom: -2px; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <div class="nav-title">Part 03 Unit 02 - 第一次 Markdown 轉 Word</div>
+        <div class="nav-buttons" style="display: flex; gap: 12px;">
+            <button class="nav-btn" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-btn" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-btn">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-btn">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container">
+
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <div class="content-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h4 style="color: #4facfe; letter-spacing: 2px; margin-bottom: 10px;">Part 03 - Pandoc 安裝與基礎轉換</h4>
+                <h1>Unit 02: 第一次轉換</h1>
+                <h2 style="border: none; font-weight: normal; font-size: 28px; color: #666;">
+                    從 Markdown 到 Word：實際動手做！
+                </h2>
+                <div style="margin-top: 40px; display: flex; gap: 20px;">
+                    <span class="highlight">.md</span>
+                    <span style="font-size: 30px;">→</span>
+                    <span class="highlight">.docx</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: 學習目標 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>本單元學習目標</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">1️⃣</div>
+                        <h3>建立 Markdown 檔案</h3>
+                        <p>在 Antigravity 中建立測試用的 .md 檔案</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">2️⃣</div>
+                        <h3>執行轉換指令</h3>
+                        <p>使用 Pandoc 將 .md 轉成 .docx</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">3️⃣</div>
+                        <h3>驗證轉換結果</h3>
+                        <p>用 Word 開啟並確認格式正確</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">4️⃣</div>
+                        <h3>了解轉換對應</h3>
+                        <p>Markdown 語法如何對應到 Word 樣式</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 準備工作區 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 1：建立工作資料夾</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>開啟 Antigravity</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>按 <code>Ctrl+K Ctrl+O</code> 開啟資料夾</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>選擇或建立一個測試用資料夾（例如：桌面上的「Pandoc練習」）</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>確認左側檔案總管顯示該資料夾</p>
+                </div>
+                <div class="box info">
+                    <strong>建議：</strong>使用專門的練習資料夾，方便管理檔案！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: 建立 Markdown 檔案 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 2：建立 Markdown 檔案</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>在檔案總管空白處<strong>右鍵</strong> → <strong>New File</strong></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>輸入檔名：<code>sample.md</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>按 Enter 確認</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>檔案會自動開啟在編輯區</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 輸入 Markdown 內容 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 3：輸入測試內容</h2>
+                <p>在 <code>sample.md</code> 中輸入以下內容：</p>
+                <div class="file-tab">📄 sample.md</div>
+                <div class="file-preview">
+<pre style="background: transparent; color: #333; margin: 0; padding: 0;"># 我的第一份文件
+
+這是用 **Markdown** 寫的文件，將會轉換成 Word 格式。
+
+## 章節一：簡介
+
+這是第一個章節的內容。Markdown 讓寫作變得簡單！
+
+### 小節 1.1
+
+- 項目一
+- 項目二
+- 項目三
+
+## 章節二：程式碼
+
+以下是程式碼範例：
+
+`print("Hello World")`
+
+## 結論
+
+感謝閱讀！</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: 儲存檔案 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 4：儲存檔案</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>輸入完內容後，按 <code>Ctrl + S</code> 儲存</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>確認分頁標籤上的白點（●）消失</p>
+                    <p style="margin-left: 55px; color: #666;">有白點表示未儲存，沒有白點表示已儲存</p>
+                </div>
+                <div class="box success">
+                    <strong>成功標準：</strong>檔案已儲存，分頁標籤顯示 <code>sample.md</code> 沒有白點！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: 開啟終端機 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 5：開啟終端機</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>按 <code>Ctrl + `</code> 開啟終端機</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>確認終端機的工作目錄是你的專案資料夾</p>
+                    <div class="command-box">
+                        PS C:\Users\你的名字\Desktop\Pandoc練習>
+                    </div>
+                </div>
+                <div class="box info">
+                    <strong>重點：</strong>終端機會自動在專案資料夾中開啟，這樣才能找到 sample.md！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: 執行轉換指令 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 6：執行轉換指令</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>在終端機中輸入以下指令：</p>
+                    <div class="command-box" style="font-size: 22px;">
+                        pandoc sample.md -o sample.docx
+                    </div>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>按 <code>Enter</code> 執行</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>如果沒有錯誤訊息，表示轉換成功！</p>
+                </div>
+                <div class="box success">
+                    <strong>注意：</strong>Pandoc 成功時不會有任何輸出，這是正常的！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: 確認輸出檔案 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 7：確認輸出檔案</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>查看左側檔案總管</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>應該會看到新的 <code>sample.docx</code> 檔案</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>如果沒看到，按 F5 重新整理檔案列表</p>
+                </div>
+                <div class="box success">
+                    <strong>成功！</strong>你已經完成第一次 Markdown → Word 轉換！🎉
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: 用 Word 開啟 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>步驟 8：用 Word 開啟檢視</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>在檔案總管中找到 <code>sample.docx</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span><strong>右鍵</strong> → <strong>Reveal in File Explorer</strong>（在檔案總管中顯示）</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>雙擊 <code>sample.docx</code> 用 Word 開啟</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>檢視轉換結果！</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: 轉換對應說明 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Markdown → Word 對應關係</h2>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <tr style="background: #1e3c72; color: white;">
+                        <th style="padding: 15px;">Markdown 語法</th>
+                        <th style="padding: 15px;">Word 樣式</th>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 15px;"><code># 標題</code></td>
+                        <td style="padding: 15px;">標題 1 (Heading 1)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;"><code>## 標題</code></td>
+                        <td style="padding: 15px;">標題 2 (Heading 2)</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 15px;"><code>### 標題</code></td>
+                        <td style="padding: 15px;">標題 3 (Heading 3)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;"><code>**粗體**</code></td>
+                        <td style="padding: 15px;">粗體 (Bold)</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 15px;"><code>*斜體*</code></td>
+                        <td style="padding: 15px;">斜體 (Italic)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;"><code>- 項目</code></td>
+                        <td style="padding: 15px;">項目符號清單</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 15px;"><code>1. 項目</code></td>
+                        <td style="padding: 15px;">編號清單</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 12: 用終端機確認檔案 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>用終端機確認檔案（進階）</h2>
+                <p>你也可以用終端機指令確認檔案是否產生：</p>
+                <h3>Windows (PowerShell)</h3>
+                <div class="command-box">
+                    dir *.docx
+                </div>
+                <h3>macOS / Linux</h3>
+                <div class="command-box">
+                    ls *.docx
+                </div>
+                <div class="box info">
+                    <strong>預期輸出：</strong>會顯示 sample.docx 的檔案資訊
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: 練習不同內容 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作練習 1：轉換更豐富的內容</h2>
+                <p>建立 <code>report.md</code>，輸入以下內容：</p>
+                <div class="file-preview" style="font-size: 16px;">
+<pre style="background: transparent; color: #333; margin: 0;">## 專案報告
+
+### 摘要
+這是一份使用 **Pandoc** 轉換的測試報告。
+
+### 重點項目
+1. 第一點：學會安裝 Pandoc
+2. 第二點：學會基本轉換
+3. 第三點：學會樣式對應
+
+### 結論
+Pandoc 是一個*非常實用*的工具！
+
+> 引用：「簡單的工具，強大的功能。」</pre>
+                </div>
+                <p>然後執行：<code>pandoc report.md -o report.docx</code></p>
+            </div>
+        </div>
+
+        <!-- Slide 14: 練習表格轉換 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作練習 2：表格轉換</h2>
+                <p>建立 <code>table.md</code>，輸入以下內容：</p>
+                <div class="file-preview">
+<pre style="background: transparent; color: #333; margin: 0;"># 表格測試
+
+| 項目 | 說明 | 價格 |
+|------|------|------|
+| 蘋果 | 紅色水果 | $30 |
+| 香蕉 | 黃色水果 | $20 |
+| 橘子 | 橙色水果 | $25 |</pre>
+                </div>
+                <p>執行轉換：</p>
+                <div class="command-box">
+                    pandoc table.md -o table.docx
+                </div>
+                <div class="box success">
+                    <strong>觀察：</strong>Markdown 表格會轉換成 Word 表格！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: 一次轉換多種格式 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>進階：一次轉換多種格式</h2>
+                <p>Pandoc 可以輸出多種格式，只要改副檔名：</p>
+                <div class="command-box">
+                    <span style="color: #6a9955;"># 轉成 Word</span><br>
+                    pandoc sample.md -o sample.docx<br><br>
+                    <span style="color: #6a9955;"># 轉成 HTML</span><br>
+                    pandoc sample.md -o sample.html<br><br>
+                    <span style="color: #6a9955;"># 轉成 PDF（需要額外安裝）</span><br>
+                    pandoc sample.md -o sample.pdf
+                </div>
+                <div class="box info">
+                    <strong>注意：</strong>PDF 轉換需要額外安裝 LaTeX，本課程專注在 Word 轉換
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: 讓 AI 幫忙 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>進階：讓 AI 幫你執行</h2>
+                <p>你可以在 Antigravity 的 AI 面板中這樣說：</p>
+                <div class="step-box">
+                    <p><strong>範例 1：</strong></p>
+                    <div class="command-box" style="background: #e8f5e9; color: #2e7d32;">
+                        請幫我把 sample.md 轉換成 Word 檔案
+                    </div>
+                </div>
+                <div class="step-box">
+                    <p><strong>範例 2：</strong></p>
+                    <div class="command-box" style="background: #e8f5e9; color: #2e7d32;">
+                        執行 pandoc sample.md -o sample.docx
+                    </div>
+                </div>
+                <div class="box success">
+                    <strong>AI 會幫你：</strong>在終端機中執行對應的 Pandoc 指令！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: 測驗 1 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 1</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>在 Markdown 中，<code># 標題</code> 會轉換成 Word 的什麼樣式？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li>內文 (Normal)</li>
+                        <li>標題 1 (Heading 1)</li>
+                        <li>標題 2 (Heading 2)</li>
+                        <li>粗體 (Bold)</li>
+                    </ol>
+                    <button class="quiz-btn" onclick="openPasswordModal(17)">🔑 查看解答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18: 測驗 1 解答 -->
+        <div class="slide locked" id="slide-17">
+            <div class="content-card">
+                <h2>✅ 測驗 1 解答</h2>
+                <div class="box success">
+                    <h3>答案：(2) 標題 1 (Heading 1)</h3>
+                    <p><strong>對應關係：</strong></p>
+                    <ul>
+                        <li><code>#</code> → 標題 1</li>
+                        <li><code>##</code> → 標題 2</li>
+                        <li><code>###</code> → 標題 3</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(17)">🔓 點擊解鎖</button>
+            </div>
+        </div>
+
+        <!-- Slide 19: 測驗 2 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 2</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>執行 Pandoc 轉換成功時，終端機會顯示什麼？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li>「轉換成功！」</li>
+                        <li>「Success!」</li>
+                        <li>什麼都不顯示</li>
+                        <li>顯示轉換進度條</li>
+                    </ol>
+                    <button class="quiz-btn" onclick="openPasswordModal(19)">🔑 查看解答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 20: 測驗 2 解答 -->
+        <div class="slide locked" id="slide-19">
+            <div class="content-card">
+                <h2>✅ 測驗 2 解答</h2>
+                <div class="box success">
+                    <h3>答案：(3) 什麼都不顯示</h3>
+                    <p><strong>解釋：</strong>這是 Unix 工具的傳統——「沒有消息就是好消息」。Pandoc 成功時不輸出任何訊息，只有發生錯誤時才會顯示錯誤訊息。</p>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(19)">🔓 點擊解鎖</button>
+            </div>
+        </div>
+
+        <!-- Slide 21: 常見成功確認方式 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>如何確認轉換成功？</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">📁</div>
+                        <h3>方法 1</h3>
+                        <p>查看檔案總管是否有新的 .docx 檔案</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">📄</div>
+                        <h3>方法 2</h3>
+                        <p>用 Word 開啟檔案確認內容</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">⌨️</div>
+                        <h3>方法 3</h3>
+                        <p>用 <code>dir *.docx</code> 指令確認</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">❌</div>
+                        <h3>失敗時</h3>
+                        <p>終端機會顯示紅色錯誤訊息</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 22: 總結 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Unit 02 總結</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">✅</div>
+                        <h3>已學會</h3>
+                        <ul>
+                            <li>建立 Markdown 測試檔案</li>
+                            <li>執行 pandoc 轉換指令</li>
+                            <li>驗證轉換結果</li>
+                            <li>Markdown → Word 對應關係</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">➡️</div>
+                        <h3>下一步</h3>
+                        <p><strong>Unit 03：</strong>學習常見錯誤與解決方案！</p>
+                    </div>
+                </div>
+                <div class="box success" style="margin-top: 30px;">
+                    <strong>恭喜！</strong>你已經成功完成第一次 Pandoc 轉換！
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-box">
+            <h2 style="color: #1e3c72;">🔒 解鎖解答</h2>
+            <input type="password" class="modal-input" id="passwordInput" placeholder="密碼">
+            <div>
+                <button class="modal-btn" onclick="verifyPassword()">確認</button>
+                <button class="modal-btn" style="background:#999" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide=0;const slides=document.querySelectorAll('.slide'),totalSlides=slides.length;let unlockedSlides=new Set(),pendingUnlockIndex=-1;const CORRECT_PASSWORD="0207";
+        function init(){createIndicators();showSlide(0);updateButtons();document.addEventListener('keydown',handleKeydown)}
+        function handleKeydown(e){if(e.key==='ArrowLeft')changeSlide(-1);if(e.key==='ArrowRight')changeSlide(1);if(e.key==='Enter'&&document.getElementById('passwordModal').style.display==='flex')verifyPassword()}
+        function createIndicators(){const c=document.getElementById('indicatorContainer');slides.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.onclick=()=>goToSlide(i);c.appendChild(d)})}
+        function showSlide(i){if(i<0)i=0;if(i>=totalSlides)i=totalSlides-1;slides.forEach(s=>s.classList.remove('active'));slides[i].classList.add('active');if(!slides[i].classList.contains('locked')||unlockedSlides.has(i))slides[i].classList.remove('locked');currentSlide=i;document.querySelectorAll('.dot').forEach((d,idx)=>d.classList.toggle('active',idx===i));updateButtons()}
+        function changeSlide(d){showSlide(currentSlide+d)}function goToSlide(i){showSlide(i)}
+        function updateButtons(){document.getElementById('prevBtn').disabled=currentSlide===0;document.getElementById('nextBtn').disabled=currentSlide===totalSlides-1}
+        function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else if(document.exitFullscreen)document.exitFullscreen()}
+        function openPasswordModal(i){pendingUnlockIndex=i;document.getElementById('passwordModal').style.display='flex';document.getElementById('passwordInput').value='';document.getElementById('passwordInput').focus()}
+        function closeModal(){document.getElementById('passwordModal').style.display='none'}
+        function verifyPassword(){if(document.getElementById('passwordInput').value===CORRECT_PASSWORD){unlockedSlides.add(pendingUnlockIndex);if(currentSlide===pendingUnlockIndex)slides[currentSlide].classList.remove('locked');else showSlide(pendingUnlockIndex);closeModal()}else{alert("❌ 密碼錯誤！");document.getElementById('passwordInput').value=''}}
+        init();
+    </script>
+</body>
+</html>

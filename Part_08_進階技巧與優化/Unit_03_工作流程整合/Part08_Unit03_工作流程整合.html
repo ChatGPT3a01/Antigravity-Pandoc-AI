@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 08 Unit 03 - 工作流程整合</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .slide-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .slide {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 60px;
+            min-height: 80vh;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #9b59b6, #3498db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            color: #3498db;
+        }
+
+        h3 {
+            font-size: 1.6em;
+            margin: 20px 0 15px 0;
+            color: #9b59b6;
+        }
+
+        p, li {
+            font-size: 1.4em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 20px;
+        }
+
+        .code-block {
+            background: #0d1117;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 1.1em;
+            color: #e6e6e6;
+            white-space: pre;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.2), rgba(52, 152, 219, 0.2));
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #9b59b6;
+        }
+
+        .tip-box {
+            background: rgba(52, 152, 219, 0.15);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+
+        .warning-box {
+            background: rgba(241, 196, 15, 0.15);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #f1c40f;
+        }
+
+        .step-number {
+            display: inline-flex;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #9b59b6, #3498db);
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #fff;
+            margin-right: 15px;
+        }
+
+        .workflow-step {
+            display: flex;
+            align-items: flex-start;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+
+        .workflow-arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #3498db;
+            margin: 10px 0;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        .nav-btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .nav-btn.prev {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+        }
+
+        .nav-btn.next {
+            background: linear-gradient(135deg, #9b59b6, #3498db);
+            color: #fff;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(155, 89, 182, 0.3);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #9b59b6, #3498db);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .slide-number {
+            text-align: center;
+            font-size: 1.1em;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .practice-box {
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.15), rgba(52, 152, 219, 0.15));
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px dashed #3498db;
+        }
+
+        .quiz-option {
+            display: block;
+            width: 100%;
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #e0e0e0;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .quiz-option:hover {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: #3498db;
+        }
+
+        .quiz-option.correct {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: #2ecc71;
+        }
+
+        .quiz-option.wrong {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+        }
+
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(155, 89, 182, 0.3);
+        }
+
+        .integration-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .integration-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* 頂部導航列 */
+        .nav-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(255, 107, 107, 0.95); backdrop-filter: blur(12px); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .nav-bar .nav-title { font-size: 20px; font-weight: 700; color: #fff; }
+        .nav-bar .nav-buttons { display: flex; gap: 12px; }
+        .nav-bar .nav-link { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.3s; }
+        .nav-bar .nav-link:hover { background: rgba(255,255,255,0.4); transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-title">Part 08 Unit 03 - 工作流程整合</div>
+        <div class="nav-buttons">
+            <button class="nav-link" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-link" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-link">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-link">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container" style="margin-top: 70px;">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <h1>Part 08 Unit 03</h1>
+            <h2>工作流程整合</h2>
+            <p>打造完整的文件處理流水線</p>
+            <br><br>
+            <div class="highlight">
+                <h3>學習目標</h3>
+                <ul>
+                    <li>設計端到端的文件處理流程</li>
+                    <li>整合多種工具和服務</li>
+                    <li>建立自動化觸發機制</li>
+                    <li>實現完整的文件管理系統</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 2: 什麼是工作流程整合 -->
+        <div class="slide">
+            <h2>什麼是工作流程整合？</h2>
+            <br>
+            <div class="highlight">
+                <p><strong>定義：</strong>將多個獨立的步驟串連成一個自動化流程，讓工作能夠順暢進行</p>
+            </div>
+            <br>
+            <div class="workflow-step">
+                <span class="step-number">1</span>
+                <div>
+                    <strong>輸入</strong><br>
+                    從各種來源收集文件
+                </div>
+            </div>
+            <div class="workflow-arrow">↓</div>
+            <div class="workflow-step">
+                <span class="step-number">2</span>
+                <div>
+                    <strong>處理</strong><br>
+                    AI 整理 + Pandoc 轉換
+                </div>
+            </div>
+            <div class="workflow-arrow">↓</div>
+            <div class="workflow-step">
+                <span class="step-number">3</span>
+                <div>
+                    <strong>輸出</strong><br>
+                    分發到各個目的地
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 常見的整合場景 -->
+        <div class="slide">
+            <h2>常見的整合場景</h2>
+            <br>
+            <div class="flex-row">
+                <div class="integration-card">
+                    <div class="integration-icon">📥</div>
+                    <h3>收信整理</h3>
+                    <p>Email 附件自動處理</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">📁</div>
+                    <h3>資料夾監控</h3>
+                    <p>新檔案自動轉換</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">📤</div>
+                    <h3>報告發送</h3>
+                    <p>定時產生並寄送</p>
+                </div>
+            </div>
+            <br>
+            <div class="flex-row">
+                <div class="integration-card">
+                    <div class="integration-icon">🔄</div>
+                    <h3>版本管理</h3>
+                    <p>與 Git 整合</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">☁️</div>
+                    <h3>雲端同步</h3>
+                    <p>與雲端硬碟整合</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">🤖</div>
+                    <h3>AI 處理</h3>
+                    <p>智慧分類整理</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: 設計流程的原則 -->
+        <div class="slide">
+            <h2>設計流程的原則</h2>
+            <br>
+            <h3>1. 單一職責</h3>
+            <p>每個步驟只做一件事，容易維護和除錯</p>
+            <br>
+            <h3>2. 可重複使用</h3>
+            <p>建立通用的元件，在不同流程中重複使用</p>
+            <br>
+            <h3>3. 容錯設計</h3>
+            <p>任何步驟失敗都不會影響其他步驟</p>
+            <br>
+            <h3>4. 可觀察性</h3>
+            <p>能夠追蹤每個步驟的執行狀態</p>
+        </div>
+
+        <!-- Slide 5: 實作 - 資料夾監控 -->
+        <div class="slide">
+            <h2>實作：資料夾監控轉換</h2>
+            <br>
+            <div class="highlight">
+                <p><strong>目標：</strong>監控特定資料夾，新的 .md 檔案自動轉換成 .docx</p>
+            </div>
+            <br>
+            <p><span class="step-number">1</span>開啟 Antigravity</p>
+            <br>
+            <p><span class="step-number">2</span>請 AI 幫你建立監控腳本</p>
+            <div class="code-block">
+                <code>請幫我建立一個 PowerShell 腳本，
+可以監控指定資料夾，
+當有新的 .md 檔案出現時，
+自動使用 Pandoc 轉換成 .docx</code>
+            </div>
+        </div>
+
+        <!-- Slide 6: 資料夾監控腳本 -->
+        <div class="slide">
+            <h2>資料夾監控腳本</h2>
+            <div class="code-block">
+                <code># watch-folder.ps1
+param(
+    [string]$WatchPath = "D:\待處理",
+    [string]$OutputPath = "D:\已完成"
+)
+
+# 確保輸出資料夾存在
+if (!(Test-Path $OutputPath)) {
+    New-Item -ItemType Directory -Path $OutputPath | Out-Null
+}
+
+Write-Host "開始監控: $WatchPath" -ForegroundColor Cyan
+Write-Host "輸出到: $OutputPath" -ForegroundColor Cyan
+Write-Host "按 Ctrl+C 停止`n"
+
+# 建立檔案監控器
+$watcher = New-Object System.IO.FileSystemWatcher
+$watcher.Path = $WatchPath
+$watcher.Filter = "*.md"
+$watcher.EnableRaisingEvents = $true
+
+# 當有新檔案時觸發
+Register-ObjectEvent $watcher "Created" -Action {
+    $file = $Event.SourceEventArgs.FullPath
+    $name = $Event.SourceEventArgs.Name
+    $output = "$using:OutputPath\$([System.IO.Path]::ChangeExtension($name, '.docx'))"
+
+    Start-Sleep -Seconds 1  # 等待檔案寫入完成
+    pandoc $file -o $output
+    Write-Host "已轉換: $name" -ForegroundColor Green
+}
+
+# 保持腳本運行
+while ($true) { Start-Sleep -Seconds 1 }</code>
+            </div>
+        </div>
+
+        <!-- Slide 7: 定時任務設定 -->
+        <div class="slide">
+            <h2>定時任務設定</h2>
+            <br>
+            <h3>Windows 工作排程器</h3>
+            <p>讓腳本在指定時間自動執行</p>
+            <br>
+            <div class="code-block">
+                <code># 使用 PowerShell 建立排程任務
+$action = New-ScheduledTaskAction `
+    -Execute "PowerShell.exe" `
+    -Argument "-File D:\Scripts\daily-report.ps1"
+
+$trigger = New-ScheduledTaskTrigger `
+    -Daily -At "09:00"
+
+Register-ScheduledTask `
+    -TaskName "每日報告生成" `
+    -Action $action `
+    -Trigger $trigger `
+    -Description "每天早上 9 點自動生成報告"</code>
+            </div>
+        </div>
+
+        <!-- Slide 8: 完整日報流程 -->
+        <div class="slide">
+            <h2>範例：完整日報流程</h2>
+            <br>
+            <div class="workflow-step">
+                <span class="step-number">1</span>
+                <div>
+                    <strong>收集資料</strong><br>
+                    從資料庫或檔案讀取當天數據
+                </div>
+            </div>
+            <div class="workflow-arrow">↓</div>
+            <div class="workflow-step">
+                <span class="step-number">2</span>
+                <div>
+                    <strong>AI 分析</strong><br>
+                    使用 AI 生成摘要和洞察
+                </div>
+            </div>
+            <div class="workflow-arrow">↓</div>
+            <div class="workflow-step">
+                <span class="step-number">3</span>
+                <div>
+                    <strong>生成報告</strong><br>
+                    套用模板產生 Markdown
+                </div>
+            </div>
+            <div class="workflow-arrow">↓</div>
+            <div class="workflow-step">
+                <span class="step-number">4</span>
+                <div>
+                    <strong>轉換格式</strong><br>
+                    Pandoc 轉成 Word/PDF
+                </div>
+            </div>
+            <div class="workflow-arrow">↓</div>
+            <div class="workflow-step">
+                <span class="step-number">5</span>
+                <div>
+                    <strong>發送通知</strong><br>
+                    Email 或訊息通知相關人員
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: 日報生成腳本 -->
+        <div class="slide">
+            <h2>日報生成腳本</h2>
+            <div class="code-block">
+                <code># daily-report.ps1
+$date = Get-Date -Format "yyyy-MM-dd"
+$reportDir = "D:\報告\$date"
+
+# 建立目錄
+New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
+
+# 步驟 1: 收集資料
+$data = @{
+    date = $date
+    sales = Get-Content "D:\數據\sales.json" | ConvertFrom-Json
+    tasks = Get-Content "D:\數據\tasks.csv" | ConvertFrom-Csv
+}
+
+# 步驟 2: 生成報告內容
+$template = Get-Content "D:\模板\daily-template.md" -Raw
+$report = $template -replace '\{\{date\}\}', $date
+
+# 步驟 3: 儲存並轉換
+$mdFile = "$reportDir\daily-report.md"
+$docxFile = "$reportDir\daily-report.docx"
+$report | Out-File $mdFile -Encoding UTF8
+pandoc $mdFile -o $docxFile
+
+Write-Host "日報已生成: $docxFile" -ForegroundColor Green</code>
+            </div>
+        </div>
+
+        <!-- Slide 10: 與雲端服務整合 -->
+        <div class="slide">
+            <h2>與雲端服務整合</h2>
+            <br>
+            <h3>OneDrive / Google Drive 整合</h3>
+            <p>將輸出檔案自動同步到雲端</p>
+            <br>
+            <div class="code-block">
+                <code># 設定輸出到 OneDrive 同步資料夾
+$outputPath = "$env:USERPROFILE\OneDrive\報告"
+
+# 轉換後檔案會自動同步到雲端
+pandoc report.md -o "$outputPath\report.docx"
+
+Write-Host "報告已儲存並同步到雲端"</code>
+            </div>
+            <br>
+            <div class="tip-box">
+                <p><strong>技巧：</strong>只要將輸出目錄設在 OneDrive 或 Google Drive 的同步資料夾，檔案就會自動上傳！</p>
+            </div>
+        </div>
+
+        <!-- Slide 11: Git 整合 -->
+        <div class="slide">
+            <h2>與 Git 版本控制整合</h2>
+            <br>
+            <div class="code-block">
+                <code># git-publish.ps1
+# 文件修改後自動提交和發布
+param([string]$Message = "更新文件")
+
+$docsPath = "D:\專案\docs"
+
+# 轉換所有文件
+Get-ChildItem "$docsPath\*.md" | ForEach-Object {
+    $output = [System.IO.Path]::ChangeExtension($_.FullName, ".html")
+    pandoc $_.FullName -o $output --standalone
+}
+
+# Git 操作
+Set-Location $docsPath
+git add .
+git commit -m $Message
+git push
+
+Write-Host "文件已發布!" -ForegroundColor Green</code>
+            </div>
+        </div>
+
+        <!-- Slide 12: 多格式輸出流程 -->
+        <div class="slide">
+            <h2>多格式輸出流程</h2>
+            <br>
+            <p>一次轉換，多種格式輸出</p>
+            <div class="code-block">
+                <code># multi-format.ps1
+param([string]$InputFile)
+
+$baseName = [System.IO.Path]::GetFileNameWithoutExtension($InputFile)
+$outputDir = "output"
+
+# 確保輸出目錄存在
+New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
+
+# 定義要輸出的格式
+$formats = @{
+    "docx" = ""
+    "html" = "--standalone --self-contained"
+    "pdf" = "--pdf-engine=xelatex"
+}
+
+foreach ($format in $formats.Keys) {
+    $output = "$outputDir\$baseName.$format"
+    $args = $formats[$format]
+
+    Write-Host "轉換為 $format..." -NoNewline
+    Invoke-Expression "pandoc $InputFile -o $output $args"
+    Write-Host " 完成" -ForegroundColor Green
+}
+
+Write-Host "`n所有格式已輸出到 $outputDir\"</code>
+            </div>
+        </div>
+
+        <!-- Slide 13: 條件式流程 -->
+        <div class="slide">
+            <h2>條件式流程處理</h2>
+            <br>
+            <p>根據檔案類型或內容決定處理方式</p>
+            <div class="code-block">
+                <code># smart-process.ps1
+param([string]$InputFile)
+
+# 讀取檔案判斷類型
+$content = Get-Content $InputFile -Raw -Encoding UTF8
+
+# 根據內容決定處理方式
+if ($content -match "^---") {
+    Write-Host "偵測到 YAML 標頭，使用模板轉換"
+    pandoc $InputFile -o output.docx --reference-doc=template.docx
+}
+elseif ($content -match "```") {
+    Write-Host "偵測到程式碼，使用語法高亮"
+    pandoc $InputFile -o output.html --highlight-style=monokai
+}
+else {
+    Write-Host "一般文件，標準轉換"
+    pandoc $InputFile -o output.docx
+}</code>
+            </div>
+        </div>
+
+        <!-- Slide 14: 管線處理 -->
+        <div class="slide">
+            <h2>管線式資料處理</h2>
+            <br>
+            <h3>將多個步驟串連起來</h3>
+            <div class="code-block">
+                <code># pipeline-process.ps1
+# 處理流程：收集 → 過濾 → 轉換 → 輸出
+
+Get-ChildItem "D:\收件匣\*.md" |           # 收集檔案
+    Where-Object { $_.Length -gt 100 } |    # 過濾太小的
+    ForEach-Object {                         # 轉換每個檔案
+        $output = "D:\輸出\$($_.BaseName).docx"
+        pandoc $_.FullName -o $output
+
+        # 回傳處理結果
+        [PSCustomObject]@{
+            Source = $_.Name
+            Output = $output
+            Size = (Get-Item $output).Length
+        }
+    } |
+    Export-Csv "處理報告.csv" -NoTypeInformation  # 輸出報告
+
+Write-Host "處理完成，請查看 處理報告.csv"</code>
+            </div>
+        </div>
+
+        <!-- Slide 15: 通知整合 -->
+        <div class="slide">
+            <h2>加入通知功能</h2>
+            <br>
+            <h3>Windows Toast 通知</h3>
+            <div class="code-block">
+                <code># 完成後顯示桌面通知
+$notify = New-Object -ComObject WScript.Shell
+$notify.Popup("報告已生成完成！", 5, "轉換完成", 64)</code>
+            </div>
+            <br>
+            <h3>發送 Email (需要設定 SMTP)</h3>
+            <div class="code-block">
+                <code># 發送通知信件
+$params = @{
+    To = "manager@company.com"
+    From = "system@company.com"
+    Subject = "日報已生成 - $date"
+    Body = "請查收附件中的日報"
+    Attachments = $docxFile
+    SmtpServer = "smtp.company.com"
+}
+Send-MailMessage @params</code>
+            </div>
+        </div>
+
+        <!-- Slide 16: 完整整合範例 -->
+        <div class="slide">
+            <h2>完整整合範例</h2>
+            <div class="code-block">
+                <code># complete-workflow.ps1
+# 完整的文件處理工作流程
+
+param(
+    [string]$InputFolder = "D:\待處理",
+    [string]$OutputFolder = "D:\已完成",
+    [switch]$Notify
+)
+
+Write-Host "=== 文件處理工作流程 ===" -ForegroundColor Cyan
+$startTime = Get-Date
+
+# 1. 收集待處理檔案
+$files = Get-ChildItem "$InputFolder\*.md"
+Write-Host "找到 $($files.Count) 個檔案待處理"
+
+# 2. 處理每個檔案
+$results = @()
+foreach ($file in $files) {
+    try {
+        $output = "$OutputFolder\$($file.BaseName).docx"
+        pandoc $file.FullName -o $output
+        $results += [PSCustomObject]@{
+            File = $file.Name
+            Status = "成功"
+        }
+    }
+    catch {
+        $results += [PSCustomObject]@{
+            File = $file.Name
+            Status = "失敗: $_"
+        }
+    }
+}
+
+# 3. 輸出報告
+$duration = (Get-Date) - $startTime
+Write-Host "`n處理完成，耗時 $($duration.TotalSeconds.ToString('F1')) 秒"
+
+# 4. 發送通知
+if ($Notify) {
+    $shell = New-Object -ComObject WScript.Shell
+    $shell.Popup("處理完成！", 3, "工作流程", 64)
+}</code>
+            </div>
+        </div>
+
+        <!-- Slide 17: 實作練習 -->
+        <div class="slide">
+            <h2>實作練習</h2>
+            <br>
+            <div class="practice-box">
+                <h3>任務：建立個人工作流程</h3>
+                <br>
+                <p><span class="step-number">1</span>選擇一個你常做的文件處理任務</p>
+                <br>
+                <p><span class="step-number">2</span>列出處理步驟（輸入→處理→輸出）</p>
+                <br>
+                <p><span class="step-number">3</span>用 Antigravity AI 幫你寫腳本</p>
+                <br>
+                <p><span class="step-number">4</span>測試並優化流程</p>
+                <br>
+                <p><span class="step-number">5</span>（進階）設定定時自動執行</p>
+            </div>
+        </div>
+
+        <!-- Slide 18: AI 協助設計流程 -->
+        <div class="slide">
+            <h2>用 AI 協助設計流程</h2>
+            <br>
+            <h3>在 Antigravity 中提問</h3>
+            <div class="code-block">
+                <code>我想要建立一個自動化流程：
+
+1. 每天早上檢查特定資料夾的新檔案
+2. 將 Markdown 檔案轉換成 Word
+3. 移動到「已處理」資料夾
+4. 產生處理報告
+
+請幫我設計這個流程，並寫出完整的腳本</code>
+            </div>
+            <br>
+            <div class="tip-box">
+                <p><strong>AI 會幫你：</strong>設計流程架構、撰寫腳本、加入錯誤處理</p>
+            </div>
+        </div>
+
+        <!-- Slide 19: 流程管理技巧 -->
+        <div class="slide">
+            <h2>流程管理技巧</h2>
+            <br>
+            <div class="highlight">
+                <h3>維護建議</h3>
+                <ul>
+                    <li><strong>版本控制</strong> - 將腳本納入 Git 管理</li>
+                    <li><strong>文件記錄</strong> - 在腳本開頭寫註解說明用途</li>
+                    <li><strong>定期檢視</strong> - 每月檢查流程是否還符合需求</li>
+                    <li><strong>備份設定</strong> - 保存排程設定和腳本副本</li>
+                </ul>
+            </div>
+            <br>
+            <div class="warning-box">
+                <p><strong>注意：</strong>自動化流程可能會持續運行，要確保不會產生意外的大量檔案或佔用過多資源</p>
+            </div>
+        </div>
+
+        <!-- Slide 20: 常見整合模式 -->
+        <div class="slide">
+            <h2>常見整合模式</h2>
+            <br>
+            <h3>1. 事件驅動</h3>
+            <p>檔案變更、時間到達時觸發</p>
+            <br>
+            <h3>2. 批次處理</h3>
+            <p>累積一定數量後統一處理</p>
+            <br>
+            <h3>3. 請求驅動</h3>
+            <p>手動執行或 API 呼叫觸發</p>
+            <br>
+            <h3>4. 持續整合</h3>
+            <p>與開發流程結合，程式碼變更時自動更新文件</p>
+        </div>
+
+        <!-- Slide 21: 小測驗 -->
+        <div class="slide">
+            <h2>小測驗</h2>
+            <br>
+            <p><strong>哪個 PowerShell 類別可以用來監控資料夾變更？</strong></p>
+            <br>
+            <button class="quiz-option" onclick="checkAnswer(this, false)">A. System.IO.File</button>
+            <button class="quiz-option" onclick="checkAnswer(this, true)">B. System.IO.FileSystemWatcher</button>
+            <button class="quiz-option" onclick="checkAnswer(this, false)">C. System.IO.Directory</button>
+            <button class="quiz-option" onclick="checkAnswer(this, false)">D. System.IO.Path</button>
+            <br>
+            <div id="quiz-result" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- Slide 22: 總結 -->
+        <div class="slide">
+            <h2>本單元總結</h2>
+            <br>
+            <div class="highlight">
+                <h3>學到的技巧</h3>
+                <ul>
+                    <li>資料夾監控自動轉換</li>
+                    <li>Windows 排程任務設定</li>
+                    <li>與雲端服務整合</li>
+                    <li>多格式批次輸出</li>
+                    <li>管線式資料處理</li>
+                    <li>通知功能整合</li>
+                </ul>
+            </div>
+            <br>
+            <div class="tip-box">
+                <p><strong>恭喜！</strong>你已完成 Part 08 進階技巧與優化的學習！</p>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button class="nav-btn prev" onclick="prevSlide()">← 上一頁</button>
+            <button class="nav-btn next" onclick="nextSlide()">下一頁 →</button>
+        </div>
+        <div class="slide-number" id="slideNumber"></div>
+    </div>
+
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">全螢幕</button>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            updateProgress();
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        function updateProgress() {
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+            document.getElementById('slideNumber').textContent = `${currentSlide + 1} / ${totalSlides}`;
+        }
+
+        function checkAnswer(btn, isCorrect) {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(opt => {
+                opt.disabled = true;
+                opt.classList.remove('correct', 'wrong');
+            });
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                document.getElementById('quiz-result').innerHTML = '<p style="color: #2ecc71; font-size: 1.3em;">✓ 正確！FileSystemWatcher 可以監控檔案系統變更</p>';
+            } else {
+                btn.classList.add('wrong');
+                document.getElementById('quiz-result').innerHTML = '<p style="color: #e74c3c; font-size: 1.3em;">✗ 再想想，答案是 B. System.IO.FileSystemWatcher</p>';
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'f') toggleFullscreen();
+        });
+
+        updateProgress();
+    </script>
+</body>
+</html>

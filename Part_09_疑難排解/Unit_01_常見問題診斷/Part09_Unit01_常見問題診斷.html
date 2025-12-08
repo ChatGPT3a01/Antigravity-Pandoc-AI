@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 09 Unit 01 - 常見問題診斷</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .slide-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .slide {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 60px;
+            min-height: 80vh;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            color: #f39c12;
+        }
+
+        h3 {
+            font-size: 1.6em;
+            margin: 20px 0 15px 0;
+            color: #e67e22;
+        }
+
+        p, li {
+            font-size: 1.4em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 20px;
+        }
+
+        .code-block {
+            background: #0d1117;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #f39c12;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 1.1em;
+            color: #e6e6e6;
+            white-space: pre;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, rgba(230, 126, 34, 0.2), rgba(243, 156, 18, 0.2));
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #e67e22;
+        }
+
+        .tip-box {
+            background: rgba(46, 204, 113, 0.15);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #2ecc71;
+        }
+
+        .warning-box {
+            background: rgba(231, 76, 60, 0.15);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .error-box {
+            background: #1a0a0a;
+            border: 1px solid #e74c3c;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Consolas', monospace;
+            color: #ff6b6b;
+            margin: 15px 0;
+        }
+
+        .solution-box {
+            background: rgba(46, 204, 113, 0.15);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #2ecc71;
+        }
+
+        .step-number {
+            display: inline-flex;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #fff;
+            margin-right: 15px;
+        }
+
+        .problem-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        .nav-btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .nav-btn.prev {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+        }
+
+        .nav-btn.next {
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+            color: #fff;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(230, 126, 34, 0.3);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e67e22, #f39c12);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .slide-number {
+            text-align: center;
+            font-size: 1.1em;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .practice-box {
+            background: linear-gradient(135deg, rgba(230, 126, 34, 0.15), rgba(243, 156, 18, 0.15));
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px dashed #f39c12;
+        }
+
+        .quiz-option {
+            display: block;
+            width: 100%;
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #e0e0e0;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .quiz-option:hover {
+            background: rgba(243, 156, 18, 0.2);
+            border-color: #f39c12;
+        }
+
+        .quiz-option.correct {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: #2ecc71;
+        }
+
+        .quiz-option.wrong {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+        }
+
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(230, 126, 34, 0.3);
+        }
+
+        .checklist {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .checklist li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .checklist li::before {
+            content: "☐ ";
+            color: #f39c12;
+        }
+
+        /* 頂部導航列 */
+        .nav-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(243, 156, 18, 0.95); backdrop-filter: blur(12px); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .nav-bar .nav-title { font-size: 20px; font-weight: 700; color: #fff; }
+        .nav-bar .nav-buttons { display: flex; gap: 12px; }
+        .nav-bar .nav-link { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.3s; }
+        .nav-bar .nav-link:hover { background: rgba(255,255,255,0.4); transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-title">Part 09 Unit 01 - 常見問題診斷</div>
+        <div class="nav-buttons">
+            <button class="nav-link" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-link" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-link">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-link">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container" style="margin-top: 70px;">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <h1>Part 09 Unit 01</h1>
+            <h2>常見問題診斷</h2>
+            <p>快速找出並解決 Pandoc 轉換問題</p>
+            <br><br>
+            <div class="highlight">
+                <h3>學習目標</h3>
+                <ul>
+                    <li>認識最常見的轉換錯誤</li>
+                    <li>學會系統性的問題診斷方法</li>
+                    <li>建立問題排查清單</li>
+                    <li>快速定位問題根源</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 2: 問題診斷的心態 -->
+        <div class="slide">
+            <h2>問題診斷的正確心態</h2>
+            <br>
+            <div class="highlight">
+                <h3>遇到錯誤時...</h3>
+                <ul>
+                    <li><strong>不要慌張</strong> - 錯誤訊息是你的朋友</li>
+                    <li><strong>仔細閱讀</strong> - 錯誤訊息通常已說明原因</li>
+                    <li><strong>系統排查</strong> - 按步驟一一確認</li>
+                    <li><strong>善用工具</strong> - AI 可以幫你分析</li>
+                </ul>
+            </div>
+            <br>
+            <div class="tip-box">
+                <p><strong>記住：</strong>每個錯誤都是學習的機會！解決過一次，下次就知道怎麼處理了。</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: 錯誤類型總覽 -->
+        <div class="slide">
+            <h2>常見錯誤類型總覽</h2>
+            <br>
+            <div class="problem-card">
+                <h3>1. 檔案相關錯誤</h3>
+                <p>找不到檔案、路徑錯誤、權限問題</p>
+            </div>
+            <div class="problem-card">
+                <h3>2. 格式相關錯誤</h3>
+                <p>YAML 語法錯誤、Markdown 格式問題</p>
+            </div>
+            <div class="problem-card">
+                <h3>3. 編碼相關錯誤</h3>
+                <p>檔案編碼不正確、亂碼問題</p>
+            </div>
+            <div class="problem-card">
+                <h3>4. 轉換相關錯誤</h3>
+                <p>缺少依賴、格式不支援</p>
+            </div>
+        </div>
+
+        <!-- Slide 4: 錯誤 1 - 檔案不存在 -->
+        <div class="slide">
+            <h2>問題 1：檔案不存在</h2>
+            <br>
+            <h3>錯誤訊息</h3>
+            <div class="error-box">
+pandoc: input.md: openFile: does not exist (No such file or directory)
+            </div>
+            <br>
+            <h3>可能原因</h3>
+            <ul>
+                <li>檔案名稱拼錯</li>
+                <li>檔案不在當前目錄</li>
+                <li>路徑中有特殊字元</li>
+            </ul>
+            <br>
+            <div class="solution-box">
+                <h3>解決方法</h3>
+                <p>1. 確認檔案名稱拼寫正確</p>
+                <p>2. 使用完整路徑（如 <code>D:\docs\input.md</code>）</p>
+                <p>3. 用 <code>dir</code> 或 <code>ls</code> 確認檔案存在</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: 錯誤 2 - YAML 解析錯誤 -->
+        <div class="slide">
+            <h2>問題 2：YAML 解析錯誤</h2>
+            <br>
+            <h3>錯誤訊息</h3>
+            <div class="error-box">
+pandoc: Could not parse YAML header
+            </div>
+            <br>
+            <h3>常見原因</h3>
+            <ul>
+                <li>開頭或結尾的 <code>---</code> 缺少或不完整</li>
+                <li>縮排不一致（混用空格和 Tab）</li>
+                <li>特殊字元未正確跳脫</li>
+            </ul>
+            <br>
+            <div class="solution-box">
+                <h3>正確的 YAML 格式</h3>
+                <div class="code-block">
+                    <code>---
+title: 文件標題
+author: 作者名
+date: 2024-01-01
+---</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: YAML 常見錯誤對照 -->
+        <div class="slide">
+            <h2>YAML 錯誤對照表</h2>
+            <br>
+            <h3>錯誤示範 ❌</h3>
+            <div class="code-block">
+                <code>---
+title:文件標題      # 冒號後沒空格
+author: "作者"名    # 引號沒配對
+  date: 2024        # 縮排錯誤
+--                  # 結尾少一個 -</code>
+            </div>
+            <br>
+            <h3>正確示範 ✓</h3>
+            <div class="code-block">
+                <code>---
+title: 文件標題
+author: "作者名"
+date: 2024
+---</code>
+            </div>
+        </div>
+
+        <!-- Slide 7: 錯誤 3 - 編碼問題 -->
+        <div class="slide">
+            <h2>問題 3：編碼錯誤</h2>
+            <br>
+            <h3>錯誤訊息</h3>
+            <div class="error-box">
+pandoc: Cannot decode byte sequence...
+invalid byte sequence
+            </div>
+            <br>
+            <h3>原因</h3>
+            <p>檔案不是 UTF-8 編碼（可能是 Big5、GB2312 等）</p>
+            <br>
+            <div class="solution-box">
+                <h3>解決方法</h3>
+                <p>1. 用記事本開啟檔案</p>
+                <p>2. 選擇「另存新檔」</p>
+                <p>3. 編碼選擇「UTF-8」</p>
+                <p>4. 儲存後重新轉換</p>
+            </div>
+        </div>
+
+        <!-- Slide 8: 用 PowerShell 轉換編碼 -->
+        <div class="slide">
+            <h2>用 PowerShell 轉換編碼</h2>
+            <br>
+            <div class="code-block">
+                <code># 將檔案轉換為 UTF-8 編碼
+$content = Get-Content "old-file.md" -Encoding Default
+$content | Out-File "new-file.md" -Encoding UTF8
+
+# 批次轉換整個資料夾
+Get-ChildItem *.md | ForEach-Object {
+    $content = Get-Content $_.FullName -Encoding Default
+    $content | Out-File $_.FullName -Encoding UTF8
+    Write-Host "已轉換: $($_.Name)"
+}</code>
+            </div>
+            <div class="tip-box">
+                <p><strong>小技巧：</strong>養成習慣，建立新檔案時就使用 UTF-8 編碼！</p>
+            </div>
+        </div>
+
+        <!-- Slide 9: 錯誤 4 - 圖片找不到 -->
+        <div class="slide">
+            <h2>問題 4：圖片找不到</h2>
+            <br>
+            <h3>錯誤訊息</h3>
+            <div class="error-box">
+pandoc: Could not find image 'images/photo.png'
+            </div>
+            <br>
+            <h3>可能原因</h3>
+            <ul>
+                <li>圖片路徑寫錯</li>
+                <li>圖片檔案不存在</li>
+                <li>使用了絕對路徑但檔案位置變了</li>
+            </ul>
+            <br>
+            <div class="solution-box">
+                <h3>解決方法</h3>
+                <p>確保圖片和 Markdown 的相對位置正確</p>
+                <div class="code-block">
+                    <code>project/
+├── document.md
+└── images/
+    └── photo.png
+
+# 在 document.md 中使用：
+![圖片說明](images/photo.png)</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: 錯誤 5 - PDF 引擎找不到 -->
+        <div class="slide">
+            <h2>問題 5：PDF 引擎找不到</h2>
+            <br>
+            <h3>錯誤訊息</h3>
+            <div class="error-box">
+pdflatex not found. Please select a different --pdf-engine
+            </div>
+            <br>
+            <h3>原因</h3>
+            <p>系統沒有安裝 LaTeX（Pandoc 轉 PDF 需要）</p>
+            <br>
+            <div class="solution-box">
+                <h3>解決方法</h3>
+                <ul>
+                    <li><strong>方法 1：</strong>安裝 MiKTeX（推薦，較小）</li>
+                    <li><strong>方法 2：</strong>安裝 TeX Live（完整，較大）</li>
+                    <li><strong>方法 3：</strong>先轉成 HTML 或 DOCX，再另存 PDF</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 11: 問題診斷流程 -->
+        <div class="slide">
+            <h2>系統性問題診斷流程</h2>
+            <br>
+            <p><span class="step-number">1</span><strong>閱讀錯誤訊息</strong> - 找出關鍵字</p>
+            <br>
+            <p><span class="step-number">2</span><strong>確認輸入</strong> - 檔案存在？路徑對？</p>
+            <br>
+            <p><span class="step-number">3</span><strong>簡化測試</strong> - 用最簡單的指令測試</p>
+            <br>
+            <p><span class="step-number">4</span><strong>逐步增加</strong> - 一次加一個選項</p>
+            <br>
+            <p><span class="step-number">5</span><strong>尋求幫助</strong> - 請 AI 分析錯誤</p>
+        </div>
+
+        <!-- Slide 12: 診斷檢查清單 -->
+        <div class="slide">
+            <h2>診斷檢查清單</h2>
+            <br>
+            <ul class="checklist">
+                <li>Pandoc 已正確安裝？（執行 <code>pandoc --version</code>）</li>
+                <li>輸入檔案存在？（路徑正確？）</li>
+                <li>檔案編碼是 UTF-8？</li>
+                <li>YAML 標頭格式正確？</li>
+                <li>圖片路徑正確且檔案存在？</li>
+                <li>輸出目錄有寫入權限？</li>
+                <li>（PDF）LaTeX 已安裝？</li>
+                <li>指令參數拼寫正確？</li>
+            </ul>
+        </div>
+
+        <!-- Slide 13: 使用 verbose 模式 -->
+        <div class="slide">
+            <h2>使用 --verbose 取得詳細資訊</h2>
+            <br>
+            <div class="code-block">
+                <code># 顯示詳細的轉換過程
+pandoc input.md -o output.docx --verbose</code>
+            </div>
+            <br>
+            <h3>verbose 輸出會顯示：</h3>
+            <ul>
+                <li>正在處理哪些檔案</li>
+                <li>使用哪個 writer</li>
+                <li>處理的每個步驟</li>
+                <li>詳細的錯誤位置</li>
+            </ul>
+            <br>
+            <div class="tip-box">
+                <p>遇到問題時，先加上 --verbose 再執行一次！</p>
+            </div>
+        </div>
+
+        <!-- Slide 14: 簡化測試法 -->
+        <div class="slide">
+            <h2>簡化測試法</h2>
+            <br>
+            <h3>步驟一：建立最簡單的測試檔</h3>
+            <div class="code-block">
+                <code># test.md
+Hello World</code>
+            </div>
+            <br>
+            <h3>步驟二：執行最簡單的轉換</h3>
+            <div class="code-block">
+                <code>pandoc test.md -o test.html</code>
+            </div>
+            <br>
+            <h3>步驟三：逐步增加複雜度</h3>
+            <p>如果簡單的成功，再慢慢加入 YAML、圖片、選項等</p>
+        </div>
+
+        <!-- Slide 15: 實作 - 建立診斷腳本 -->
+        <div class="slide">
+            <h2>實作：建立診斷腳本</h2>
+            <br>
+            <h3>請 AI 幫你建立</h3>
+            <div class="code-block">
+                <code>請幫我建立一個 Pandoc 診斷腳本，
+可以檢查：
+1. Pandoc 是否安裝
+2. 輸入檔案是否存在
+3. 檔案編碼是否正確
+4. YAML 標頭是否有效
+5. 執行測試轉換</code>
+            </div>
+        </div>
+
+        <!-- Slide 16: 診斷腳本範例 -->
+        <div class="slide">
+            <h2>診斷腳本範例</h2>
+            <div class="code-block">
+                <code># diagnose.ps1
+param([string]$File)
+
+Write-Host "=== Pandoc 診斷 ===" -ForegroundColor Cyan
+
+# 1. 檢查 Pandoc
+Write-Host "`n[1] Pandoc 安裝:" -NoNewline
+try {
+    $v = pandoc --version | Select-Object -First 1
+    Write-Host " OK ($v)" -ForegroundColor Green
+} catch {
+    Write-Host " 未安裝!" -ForegroundColor Red
+    exit
+}
+
+# 2. 檢查檔案
+Write-Host "[2] 檔案存在:" -NoNewline
+if (Test-Path $File) {
+    Write-Host " OK" -ForegroundColor Green
+} else {
+    Write-Host " 找不到檔案!" -ForegroundColor Red
+    exit
+}
+
+# 3. 測試轉換
+Write-Host "[3] 測試轉換:" -NoNewline
+try {
+    pandoc $File -o "$env:TEMP\test.html"
+    Write-Host " OK" -ForegroundColor Green
+} catch {
+    Write-Host " 失敗" -ForegroundColor Red
+    Write-Host "    錯誤: $_"
+}</code>
+            </div>
+        </div>
+
+        <!-- Slide 17: 常見錯誤速查表 -->
+        <div class="slide">
+            <h2>常見錯誤速查表</h2>
+            <br>
+            <table style="width:100%; border-collapse: collapse; font-size: 0.9em;">
+                <tr style="background: rgba(243,156,18,0.2);">
+                    <th style="padding: 12px; text-align: left;">錯誤關鍵字</th>
+                    <th style="padding: 12px; text-align: left;">快速解法</th>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <td style="padding: 12px;">does not exist</td>
+                    <td style="padding: 12px;">檢查檔案路徑</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <td style="padding: 12px;">YAML header</td>
+                    <td style="padding: 12px;">檢查 --- 標記和縮排</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <td style="padding: 12px;">byte sequence</td>
+                    <td style="padding: 12px;">轉換為 UTF-8 編碼</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <td style="padding: 12px;">image</td>
+                    <td style="padding: 12px;">確認圖片路徑和檔案</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <td style="padding: 12px;">pdflatex</td>
+                    <td style="padding: 12px;">安裝 LaTeX 或改用其他格式</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px;">permission</td>
+                    <td style="padding: 12px;">檢查檔案/資料夾權限</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Slide 18: 實作練習 -->
+        <div class="slide">
+            <h2>實作練習</h2>
+            <br>
+            <div class="practice-box">
+                <h3>任務：練習問題診斷</h3>
+                <br>
+                <p><span class="step-number">1</span>建立一個有 YAML 錯誤的 Markdown 檔</p>
+                <br>
+                <p><span class="step-number">2</span>嘗試轉換，觀察錯誤訊息</p>
+                <br>
+                <p><span class="step-number">3</span>使用 --verbose 查看詳細資訊</p>
+                <br>
+                <p><span class="step-number">4</span>修正錯誤，成功轉換</p>
+            </div>
+        </div>
+
+        <!-- Slide 19: 預防勝於治療 -->
+        <div class="slide">
+            <h2>預防勝於治療</h2>
+            <br>
+            <div class="highlight">
+                <h3>好習慣養成</h3>
+                <ul>
+                    <li><strong>統一使用 UTF-8</strong> - 建立新檔案時就設定好</li>
+                    <li><strong>檔名不用空格</strong> - 用底線或連字號代替</li>
+                    <li><strong>相對路徑</strong> - 方便移動整個專案</li>
+                    <li><strong>先測試後執行</strong> - 批次處理前先測一個</li>
+                    <li><strong>定期備份</strong> - 避免意外覆蓋重要檔案</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 20: 小測驗 -->
+        <div class="slide">
+            <h2>小測驗</h2>
+            <br>
+            <p><strong>看到「Could not parse YAML header」錯誤，最可能的原因是？</strong></p>
+            <br>
+            <button class="quiz-option" onclick="checkAnswer(this, false)">A. Pandoc 沒有安裝</button>
+            <button class="quiz-option" onclick="checkAnswer(this, true)">B. Markdown 檔案的 YAML 標頭格式錯誤</button>
+            <button class="quiz-option" onclick="checkAnswer(this, false)">C. 電腦沒有連網</button>
+            <button class="quiz-option" onclick="checkAnswer(this, false)">D. 輸出格式不支援</button>
+            <br>
+            <div id="quiz-result" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- Slide 21: 總結 -->
+        <div class="slide">
+            <h2>本單元總結</h2>
+            <br>
+            <div class="highlight">
+                <h3>學到的技巧</h3>
+                <ul>
+                    <li>認識 5 種最常見的錯誤類型</li>
+                    <li>學會系統性診斷流程</li>
+                    <li>使用 --verbose 取得詳細資訊</li>
+                    <li>簡化測試法定位問題</li>
+                    <li>預防問題的好習慣</li>
+                </ul>
+            </div>
+            <br>
+            <div class="tip-box">
+                <p><strong>下一步：</strong>在 Unit 02 學習環境設定問題的解決方法</p>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button class="nav-btn prev" onclick="prevSlide()">← 上一頁</button>
+            <button class="nav-btn next" onclick="nextSlide()">下一頁 →</button>
+        </div>
+        <div class="slide-number" id="slideNumber"></div>
+    </div>
+
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">全螢幕</button>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            updateProgress();
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        function updateProgress() {
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+            document.getElementById('slideNumber').textContent = `${currentSlide + 1} / ${totalSlides}`;
+        }
+
+        function checkAnswer(btn, isCorrect) {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(opt => {
+                opt.disabled = true;
+                opt.classList.remove('correct', 'wrong');
+            });
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                document.getElementById('quiz-result').innerHTML = '<p style="color: #2ecc71; font-size: 1.3em;">✓ 正確！YAML 標頭格式錯誤是最常見的原因</p>';
+            } else {
+                btn.classList.add('wrong');
+                document.getElementById('quiz-result').innerHTML = '<p style="color: #e74c3c; font-size: 1.3em;">✗ 再想想，答案是 B</p>';
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'f') toggleFullscreen();
+        });
+
+        updateProgress();
+    </script>
+</body>
+</html>

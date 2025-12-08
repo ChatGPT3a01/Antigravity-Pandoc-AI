@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 03 Unit 01 - 安裝 Pandoc</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; overflow: hidden; color: #333; }
+        .nav-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; z-index: 10000; }
+        .nav-title { font-size: 22px; font-weight: 700; color: #fff; }
+        .nav-buttons { display: flex; gap: 12px; }
+        .nav-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.4); }
+        .nav-arrow { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.25); color: white; width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); font-size: 24px; cursor: pointer; z-index: 9000; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .nav-arrow:hover { background: rgba(255,255,255,0.5); transform: translateY(-50%) scale(1.1); }
+        .prev-arrow { left: 30px; } .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .slide-container { width: 100%; height: 100vh; padding-top: 60px; position: relative; }
+        .slide { position: absolute; top: 60px; left: 0; width: 100%; height: calc(100vh - 60px); display: none; align-items: center; justify-content: center; padding: 40px; opacity: 0; transition: opacity 0.4s; }
+        .slide.active { display: flex; opacity: 1; z-index: 20; }
+        .content-card { background: rgba(255,255,255,0.98); border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); padding: 60px; max-width: 1400px; width: 95%; max-height: 88vh; overflow-y: auto; }
+        .slide.locked .content-card { filter: blur(8px); pointer-events: none; }
+        .unlock-overlay-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; z-index: 50; }
+        .slide.locked .unlock-overlay-container { display: flex; }
+        .unlock-btn { background: rgba(30,60,114,0.95); color: white; border: 2px solid white; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; pointer-events: auto; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 20000; }
+        .modal-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; }
+        .modal-input { width: 100%; padding: 15px; font-size: 20px; border: 2px solid #e0e0e0; border-radius: 12px; margin: 20px 0; text-align: center; outline: none; }
+        .modal-btn { background: #1e3c72; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-size: 18px; cursor: pointer; margin: 5px; }
+        h1 { color: #1e3c72; font-size: 56px; margin-bottom: 24px; text-align: center; }
+        h2 { color: #2a5298; font-size: 38px; margin-bottom: 35px; border-bottom: 3px solid #1e3c72; padding-bottom: 12px; }
+        h3 { color: #1e3c72; font-size: 26px; margin: 30px 0 15px 0; }
+        p, li { font-size: 20px; line-height: 1.8; color: #444; margin-bottom: 15px; }
+        code { background: #f0f2f5; padding: 3px 8px; border-radius: 6px; font-family: 'Consolas', monospace; color: #d63384; font-weight: 600; }
+        pre { background: #282c34; color: #abb2bf; padding: 25px; border-radius: 12px; margin: 25px 0; font-size: 18px; line-height: 1.6; overflow-x: auto; }
+        .box { padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 6px solid; font-size: 20px; }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .highlight { background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #004d40; }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 30px; }
+        .concept-card { background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px solid #e9ecef; transition: transform 0.3s; }
+        .concept-card:hover { transform: translateY(-8px); border-color: #4facfe; }
+        .quiz-container { background: linear-gradient(145deg, #fff, #f0f4f8); border: 2px solid #1e3c72; border-radius: 20px; padding: 40px; margin: 30px 0; }
+        .quiz-btn { background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .indicators { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 4000; padding: 10px 25px; background: rgba(0,0,0,0.3); border-radius: 30px; }
+        .dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
+        .dot.active { background: #4facfe; transform: scale(1.3); }
+        .step-box { background: #f8f9fa; border-radius: 15px; padding: 25px; margin: 20px 0; border-left: 5px solid #4facfe; }
+        .step-number { display: inline-block; background: #1e3c72; color: white; width: 40px; height: 40px; border-radius: 50%; text-align: center; line-height: 40px; font-weight: bold; margin-right: 15px; }
+        .feature-icon { font-size: 48px; margin-bottom: 15px; }
+        .os-tab { display: inline-block; padding: 10px 25px; margin: 5px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+        .os-tab.windows { background: #0078d4; color: white; }
+        .os-tab.mac { background: #333; color: white; }
+        .os-tab.linux { background: #dd4814; color: white; }
+        .command-box { background: #1e1e1e; color: #4ec9b0; padding: 20px; border-radius: 10px; font-family: 'Consolas', monospace; font-size: 18px; margin: 15px 0; }
+        .command-box .comment { color: #6a9955; }
+        .command-box .cmd { color: #dcdcaa; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <div class="nav-title">Part 03 Unit 01 - 安裝 Pandoc</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="goToSlide(0)">🏠 首頁</button>
+            <button class="nav-btn" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            <a href="https://www.facebook.com/?locale=zh_TW" target="_blank" class="nav-btn">📘 FB</a>
+            <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="nav-btn">🎥 YT</a>
+        </div>
+    </div>
+
+    <div class="slide-container">
+
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <div class="content-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h4 style="color: #4facfe; letter-spacing: 2px; margin-bottom: 10px;">Part 03 - Pandoc 安裝與基礎轉換</h4>
+                <h1>Unit 01: 安裝 Pandoc</h1>
+                <h2 style="border: none; font-weight: normal; font-size: 28px; color: #666;">
+                    文件格式轉換的瑞士刀
+                </h2>
+                <div style="margin-top: 40px; display: flex; gap: 20px;">
+                    <span class="highlight">Windows</span>
+                    <span class="highlight">macOS</span>
+                    <span class="highlight">Linux</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: 什麼是 Pandoc -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>什麼是 Pandoc？</h2>
+                <div class="step-box">
+                    <p><strong>Pandoc</strong> 是一個免費、開源的<span class="highlight">文件格式轉換工具</span>，被稱為「文件轉換的瑞士刀」。</p>
+                </div>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">📄</div>
+                        <h3>支援格式眾多</h3>
+                        <p>Markdown、Word、PDF、HTML、LaTeX 等數十種格式</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">⌨️</div>
+                        <h3>命令列工具</h3>
+                        <p>透過終端機指令執行，可自動化</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🆓</div>
+                        <h3>完全免費</h3>
+                        <p>開源軟體，免費使用</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🌍</div>
+                        <h3>跨平台</h3>
+                        <p>Windows、macOS、Linux 都支援</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 為什麼需要 Pandoc -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>為什麼需要 Pandoc？</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">✍️</div>
+                        <h3>用 Markdown 寫作</h3>
+                        <p>Markdown 簡單快速，專注內容</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">📎</div>
+                        <h3>輸出 Word 文件</h3>
+                        <p>公司、學校通常要求 .docx 格式</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>Pandoc 橋接兩者</h3>
+                        <p>一個指令完成轉換！</p>
+                    </div>
+                </div>
+                <div class="box success">
+                    <strong>工作流程：</strong>用 Markdown 寫 → 用 Pandoc 轉 → 得到 Word 檔！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: 學習目標 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>本單元學習目標</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">1️⃣</div>
+                        <h3>安裝 Pandoc</h3>
+                        <p>在你的電腦上安裝 Pandoc</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">2️⃣</div>
+                        <h3>驗證安裝</h3>
+                        <p>確認 Pandoc 可以正常使用</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">3️⃣</div>
+                        <h3>了解基本語法</h3>
+                        <p>認識 Pandoc 指令的基本結構</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">4️⃣</div>
+                        <h3">整合 Antigravity</h3>
+                        <p>在 Antigravity 終端機中使用</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Windows 安裝方法選擇 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Windows 安裝方法</h2>
+                <p>Windows 有兩種推薦的安裝方式：</p>
+                <div class="concept-grid">
+                    <div class="concept-card" style="border-color: #0078d4; border-width: 3px;">
+                        <div class="feature-icon">⭐</div>
+                        <h3>方法 1：Winget（推薦）</h3>
+                        <p>Windows 11/10 內建的套件管理員</p>
+                        <p><strong>優點：</strong>一行指令搞定</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">📦</div>
+                        <h3>方法 2：官網下載</h3>
+                        <p>從 Pandoc 官網下載安裝檔</p>
+                        <p><strong>優點：</strong>適合不熟悉命令列的人</p>
+                    </div>
+                </div>
+                <div class="box info">
+                    <strong>建議：</strong>優先使用 Winget，更簡單快速！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Windows Winget 安裝 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Windows：使用 Winget 安裝</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>開啟 <strong>PowerShell</strong>（以系統管理員身份）</p>
+                    <p style="margin-left: 55px; color: #666;">按 Win 鍵 → 搜尋「PowerShell」→ 右鍵「以系統管理員身份執行」</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>輸入以下指令並按 Enter：</p>
+                    <div class="command-box">
+                        <span class="cmd">winget install JohnMacFarlane.Pandoc</span>
+                    </div>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>等待安裝完成（約 1-2 分鐘）</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span><strong>重要：</strong>關閉並重新開啟終端機</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Windows 官網下載安裝 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Windows：官網下載安裝（備選）</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>前往 Pandoc 官方下載頁面：</p>
+                    <div class="command-box" style="background: #1e3c72;">
+                        https://github.com/jgm/pandoc/releases/latest
+                    </div>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>下載 <code>pandoc-x.x.x-windows-x86_64.msi</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>雙擊執行 .msi 安裝檔</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>按照安裝精靈完成安裝</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">5</span><strong>重要：</strong>安裝完成後，關閉並重新開啟終端機</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: macOS 安裝 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>macOS：使用 Homebrew 安裝</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>開啟「終端機」（Terminal）</p>
+                    <p style="margin-left: 55px; color: #666;">Spotlight 搜尋「Terminal」或在應用程式 → 工具程式中找到</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>如果還沒安裝 Homebrew，先安裝它：</p>
+                    <div class="command-box">
+                        <span class="comment"># 安裝 Homebrew（如果已安裝可跳過）</span><br>
+                        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                    </div>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>使用 Homebrew 安裝 Pandoc：</p>
+                    <div class="command-box">
+                        <span class="comment"># 更新 Homebrew</span><br>
+                        <span class="cmd">brew update</span><br><br>
+                        <span class="comment"># 安裝 Pandoc</span><br>
+                        <span class="cmd">brew install pandoc</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Linux 安裝 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Linux：使用套件管理員安裝</h2>
+                <h3>Ubuntu / Debian</h3>
+                <div class="command-box">
+                    <span class="cmd">sudo apt update</span><br>
+                    <span class="cmd">sudo apt install pandoc</span>
+                </div>
+                <h3>Fedora / RHEL / CentOS</h3>
+                <div class="command-box">
+                    <span class="cmd">sudo dnf install pandoc</span>
+                </div>
+                <h3>Arch Linux</h3>
+                <div class="command-box">
+                    <span class="cmd">sudo pacman -S pandoc</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: 驗證安裝 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>驗證安裝是否成功</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>開啟終端機（PowerShell / Terminal）</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>輸入以下指令：</p>
+                    <div class="command-box">
+                        <span class="cmd">pandoc --version</span>
+                    </div>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>預期輸出：</p>
+                    <div class="command-box" style="color: #98c379;">
+                        pandoc 3.1.9<br>
+                        Features: +server +lua<br>
+                        Scripting engine: Lua 5.4<br>
+                        ...
+                    </div>
+                </div>
+                <div class="box success">
+                    <strong>成功標準：</strong>看到版本號（如 3.1.9）表示安裝成功！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: 在 Antigravity 中驗證 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>在 Antigravity 終端機中驗證</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>開啟 Antigravity</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>按 <code>Ctrl + `</code> 開啟終端機</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>輸入 <code>pandoc --version</code></p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>確認顯示版本資訊</p>
+                </div>
+                <div class="box info">
+                    <strong>重點：</strong>之後我們都會在 Antigravity 的終端機中執行 Pandoc！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Pandoc 基本語法 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Pandoc 基本指令語法</h2>
+                <div class="command-box" style="font-size: 22px; text-align: center;">
+                    pandoc <span style="color: #e06c75;">[輸入檔案]</span> -o <span style="color: #98c379;">[輸出檔案]</span>
+                </div>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h3>pandoc</h3>
+                        <p>程式名稱</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3 style="color: #e06c75;">[輸入檔案]</h3>
+                        <p>要轉換的來源檔案<br>例如：<code>report.md</code></p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>-o</h3>
+                        <p>output 的縮寫<br>指定輸出檔案</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3 style="color: #98c379;">[輸出檔案]</h3>
+                        <p>轉換後的檔案<br>例如：<code>report.docx</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: 範例指令 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實際範例</h2>
+                <h3>範例 1：Markdown 轉 Word</h3>
+                <div class="command-box">
+                    <span class="cmd">pandoc report.md -o report.docx</span>
+                </div>
+                <h3>範例 2：Markdown 轉 HTML</h3>
+                <div class="command-box">
+                    <span class="cmd">pandoc report.md -o report.html</span>
+                </div>
+                <h3>範例 3：Markdown 轉 PDF</h3>
+                <div class="command-box">
+                    <span class="cmd">pandoc report.md -o report.pdf</span>
+                </div>
+                <div class="box info">
+                    <strong>自動判斷：</strong>Pandoc 會根據副檔名自動判斷輸出格式！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: 處理空格檔名 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>重要：處理含空格的檔名</h2>
+                <div class="box warning">
+                    <strong>注意！</strong>如果檔名包含空格，必須用引號包起來！
+                </div>
+                <h3>❌ 錯誤寫法</h3>
+                <div class="command-box" style="border: 2px solid #e74c3c;">
+                    pandoc my report.md -o my report.docx
+                </div>
+                <h3>✅ 正確寫法</h3>
+                <div class="command-box" style="border: 2px solid #27ae60;">
+                    pandoc <span style="color: #98c379;">"my report.md"</span> -o <span style="color: #98c379;">"my report.docx"</span>
+                </div>
+                <div class="box success">
+                    <strong>建議：</strong>養成習慣，所有檔名都用引號包起來！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: 實作練習 1 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作練習 1：驗證 Pandoc 安裝</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>開啟 Antigravity</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>按 <code>Ctrl + `</code> 開啟終端機</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>輸入以下指令：</p>
+                    <div class="command-box">
+                        <span class="cmd">pandoc --version</span>
+                    </div>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">4</span>確認看到版本號</p>
+                </div>
+                <div class="box success">
+                    <strong>成功標準：</strong>終端機顯示 Pandoc 版本資訊！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: 實作練習 2 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作練習 2：查看 Pandoc 幫助</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>在終端機輸入：</p>
+                    <div class="command-box">
+                        <span class="cmd">pandoc --help</span>
+                    </div>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>觀察輸出的說明文件</p>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">3</span>找到 <code>-o</code> 參數的說明</p>
+                </div>
+                <div class="box info">
+                    <strong>技巧：</strong>忘記參數時，用 <code>--help</code> 查看說明！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: 實作練習 3 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作練習 3：查看支援格式</h2>
+                <div class="step-box">
+                    <p><span class="step-number">1</span>查看 Pandoc 支援的輸入格式：</p>
+                    <div class="command-box">
+                        <span class="cmd">pandoc --list-input-formats</span>
+                    </div>
+                </div>
+                <div class="step-box">
+                    <p><span class="step-number">2</span>查看 Pandoc 支援的輸出格式：</p>
+                    <div class="command-box">
+                        <span class="cmd">pandoc --list-output-formats</span>
+                    </div>
+                </div>
+                <div class="box success">
+                    <strong>發現：</strong>Pandoc 支援超過 50 種格式！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18: 測驗 1 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 1</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>在 Windows 上，推薦使用什麼方式安裝 Pandoc？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li>從網路上隨便下載</li>
+                        <li>使用 winget install JohnMacFarlane.Pandoc</li>
+                        <li>不需要安裝，內建就有</li>
+                        <li>從 App Store 下載</li>
+                    </ol>
+                    <button class="quiz-btn" onclick="openPasswordModal(18)">🔑 查看解答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 19: 測驗 1 解答 -->
+        <div class="slide locked" id="slide-18">
+            <div class="content-card">
+                <h2>✅ 測驗 1 解答</h2>
+                <div class="box success">
+                    <h3>答案：(2) 使用 winget install JohnMacFarlane.Pandoc</h3>
+                    <p><strong>解釋：</strong>Winget 是 Windows 內建的套件管理員，使用官方指令安裝最安全、最方便！</p>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(18)">🔓 點擊解鎖</button>
+            </div>
+        </div>
+
+        <!-- Slide 20: 測驗 2 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>隨堂測驗 2</h2>
+                <div class="quiz-container">
+                    <p><strong>問題：</strong>以下哪個指令可以將 report.md 轉換成 Word 檔案？</p>
+                    <ol style="font-size: 22px; line-height: 2;">
+                        <li><code>pandoc report.md > report.docx</code></li>
+                        <li><code>pandoc -o report.md report.docx</code></li>
+                        <li><code>pandoc report.md -o report.docx</code></li>
+                        <li><code>convert report.md to report.docx</code></li>
+                    </ol>
+                    <button class="quiz-btn" onclick="openPasswordModal(20)">🔑 查看解答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 21: 測驗 2 解答 -->
+        <div class="slide locked" id="slide-20">
+            <div class="content-card">
+                <h2>✅ 測驗 2 解答</h2>
+                <div class="box success">
+                    <h3>答案：(3) pandoc report.md -o report.docx</h3>
+                    <p><strong>語法：</strong><code>pandoc [輸入檔] -o [輸出檔]</code></p>
+                    <p>-o 代表 output，後面接輸出的檔案名稱。</p>
+                </div>
+            </div>
+            <div class="unlock-overlay-container">
+                <button class="unlock-btn" onclick="openPasswordModal(20)">🔓 點擊解鎖</button>
+            </div>
+        </div>
+
+        <!-- Slide 22: 常見安裝問題 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>常見安裝問題</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h3>❓ 找不到 pandoc 指令</h3>
+                        <p><strong>解決：</strong>關閉終端機，重新開啟再試</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>❓ winget 無法使用</h3>
+                        <p><strong>解決：</strong>更新 Windows 或使用官網下載</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>❓ 權限不足</h3>
+                        <p><strong>解決：</strong>以系統管理員身份執行</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>❓ 版本太舊</h3>
+                        <p><strong>解決：</strong>使用官網下載最新版</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 23: 總結 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Unit 01 總結</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="feature-icon">✅</div>
+                        <h3>已完成</h3>
+                        <ul>
+                            <li>了解 Pandoc 是什麼</li>
+                            <li>成功安裝 Pandoc</li>
+                            <li>驗證安裝成功</li>
+                            <li>學會基本指令語法</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card">
+                        <div class="feature-icon">➡️</div>
+                        <h3>下一步</h3>
+                        <p><strong>Unit 02：</strong>進行第一次 Markdown → Word 轉換！</p>
+                    </div>
+                </div>
+                <div class="box success" style="margin-top: 30px;">
+                    <strong>恭喜！</strong>Pandoc 已經準備就緒，接下來實際轉換檔案！
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-box">
+            <h2 style="color: #1e3c72;">🔒 解鎖解答</h2>
+            <input type="password" class="modal-input" id="passwordInput" placeholder="密碼">
+            <div>
+                <button class="modal-btn" onclick="verifyPassword()">確認</button>
+                <button class="modal-btn" style="background:#999" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide=0;const slides=document.querySelectorAll('.slide'),totalSlides=slides.length;let unlockedSlides=new Set(),pendingUnlockIndex=-1;const CORRECT_PASSWORD="0207";
+        function init(){createIndicators();showSlide(0);updateButtons();document.addEventListener('keydown',handleKeydown)}
+        function handleKeydown(e){if(e.key==='ArrowLeft')changeSlide(-1);if(e.key==='ArrowRight')changeSlide(1);if(e.key==='Enter'&&document.getElementById('passwordModal').style.display==='flex')verifyPassword()}
+        function createIndicators(){const c=document.getElementById('indicatorContainer');slides.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.onclick=()=>goToSlide(i);c.appendChild(d)})}
+        function showSlide(i){if(i<0)i=0;if(i>=totalSlides)i=totalSlides-1;slides.forEach(s=>s.classList.remove('active'));slides[i].classList.add('active');if(!slides[i].classList.contains('locked')||unlockedSlides.has(i))slides[i].classList.remove('locked');currentSlide=i;document.querySelectorAll('.dot').forEach((d,idx)=>d.classList.toggle('active',idx===i));updateButtons()}
+        function changeSlide(d){showSlide(currentSlide+d)}function goToSlide(i){showSlide(i)}
+        function updateButtons(){document.getElementById('prevBtn').disabled=currentSlide===0;document.getElementById('nextBtn').disabled=currentSlide===totalSlides-1}
+        function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else if(document.exitFullscreen)document.exitFullscreen()}
+        function openPasswordModal(i){pendingUnlockIndex=i;document.getElementById('passwordModal').style.display='flex';document.getElementById('passwordInput').value='';document.getElementById('passwordInput').focus()}
+        function closeModal(){document.getElementById('passwordModal').style.display='none'}
+        function verifyPassword(){if(document.getElementById('passwordInput').value===CORRECT_PASSWORD){unlockedSlides.add(pendingUnlockIndex);if(currentSlide===pendingUnlockIndex)slides[currentSlide].classList.remove('locked');else showSlide(pendingUnlockIndex);closeModal()}else{alert("❌ 密碼錯誤！");document.getElementById('passwordInput').value=''}}
+        init();
+    </script>
+</body>
+</html>
