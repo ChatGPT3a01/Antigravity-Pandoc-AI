@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity + Pandoc AI 整理術</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #fff;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { text-align: center; font-size: 1.2em; opacity: 0.9; margin-bottom: 40px; }
+        .start-btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 50px;
+            padding: 20px 40px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1e3c72;
+            background: #ffd700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        .start-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+        .parts { display: grid; gap: 15px; }
+        .part {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .part h3 { font-size: 1.2em; margin-bottom: 10px; color: #ffd700; }
+        .units { display: flex; flex-wrap: wrap; gap: 10px; }
+        .unit-link {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        .unit-link:hover { background: rgba(255,255,255,0.4); }
+        .footer { text-align: center; margin-top: 40px; opacity: 0.7; }
+        .footer a { color: #ffd700; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Antigravity + Pandoc AI 整理術</h1>
+        <p class="subtitle">完整 10 Part 課程 | 29 個互動式簡報</p>
+
+        <a href="Part_01_認識Antigravity/Unit_01_功能總覽/Part01_Unit01_功能總覽.html" class="start-btn">
+            🚀 開始學習
+        </a>
+
+        <div class="parts">
+            <div class="part">
+                <h3>Part 01 - 認識 Antigravity</h3>
+                <div class="units">
+                    <a href="Part_01_認識Antigravity/Unit_01_功能總覽/Part01_Unit01_功能總覽.html" class="unit-link">功能總覽</a>
+                    <a href="Part_01_認識Antigravity/Unit_02_比較差異/Part01_Unit02_比較差異.html" class="unit-link">比較差異</a>
+                </div>
+            </div>
+            <div class="part">
+                <h3>Part 02 - 環境安裝與設定</h3>
+                <div class="units">
+                    <a href="Part_02_環境安裝與設定/Unit_01_下載與安裝/Part02_Unit01_下載與安裝.html" class="unit-link">下載與安裝</a>
+                    <a href="Part_02_環境安裝與設定/Unit_02_介面導覽/Part02_Unit02_介面導覽.html" class="unit-link">介面導覽</a>
+                    <a href="Part_02_環境安裝與設定/Unit_03_選擇AI模型/Part02_Unit03_選擇AI模型.html" class="unit-link">選擇AI模型</a>
+                </div>
+            </div>
+            <div class="part">
+                <h3>Part 03 - Pandoc 安裝與基礎轉換</h3>
+                <div class="units">
+                    <a href="Part_03_Pandoc安裝與基礎轉換/Unit_01_安裝Pandoc/Part03_Unit01_安裝Pandoc.html" class="unit-link">安裝 Pandoc</a>
+                    <a href="Part_03_Pandoc安裝與基礎轉換/Unit_02_第一次轉換/Part03_Unit02_第一次轉換.html" class="unit-link">第一次轉換</a>
+                    <a href="Part_03_Pandoc安裝與基礎轉換/Unit_03_常見錯誤排解/Part03_Unit03_常見錯誤排解.html" class="unit-link">常見錯誤排解</a>
+                </div>
+            </div>
+            <div class="part">
+                <h3>Part 04 - 批次轉換與自動化</h3>
+                <div class="units">
+                    <a href="Part_04_批次轉換與自動化/Unit_01_批次處理基礎/Part04_Unit01_批次處理基礎.html" class="unit-link">批次處理基礎</a>
+                    <a href="Part_04_批次轉換與自動化/Unit_02_自動化腳本/Part04_Unit02_自動化腳本.html" class="unit-link">自動化腳本</a>
+                    <a href="Part_04_批次轉換與自動化/Unit_03_AI產生腳本/Part04_Unit03_AI產生腳本.html" class="unit-link">AI產生腳本</a>
+                </div>
+            </div>
+            <div class="part">
+                <h3>Part 05 - 進階格式轉換</h3>
+                <div class="units">
+                    <a href="Part_05_進階格式轉換/Unit_01_HTML樣式客製/Part05_Unit01_HTML樣式客製.html" class="unit-link">HTML樣式客製</a>
+                    <a href="Part_05_進階格式轉換/Unit_02_PDF輸出設定/Part05_Unit02_PDF輸出設定.html" class="unit-link">PDF輸出設定</a>
+                    <a href="Part_05_進階格式轉換/Unit_03_自訂模板/Part05_Unit03_自訂模板.html" class="unit-link">自訂模板</a>
+                </div>
+            </div>
+            <div class="part">
+                <h3>Part 06 - AI 輔助文件處理</h3>
+                <div class="units">
+                    <a href="Part_06_AI輔助文件處理/Unit_01_整理文件結構/Part06_Unit01_整理文件結構.html" class="unit-link">整理文件結構</a>
+                    <a href="Part_06_AI輔助文件處理/Unit_02_生成摘要/Part06_Unit02_生成摘要.html" class="unit-link">生成摘要</a>
+                    <a href="Part_06_AI輔助文件處理/Unit_03_校正潤飾/Part06_Unit03_校正潤飾.html" class="unit-link">校正潤飾</a>
+                </div>
+            </div>
+            <div class="part">
+                <h3>Part 07 - 實戰專案</h3>
+                <div class="units">
+                    <a href="Part_07_實戰專案/Unit_01_會議記錄整理/Part07_Unit01_會議記錄整理.html" class="unit-link">會議記錄整理</a>
+                    <a href="Part_07_實戰專案/Unit_02_技術文件製作/Part07_Unit02_技術文件製作.html" class="unit-link">技術文件製作</a>
+                    <a href="Part_07_實戰專案/Unit_03_批次報告產生/Part07_Unit03_批次報告產生.html" class="unit-link">批次報告產生</a>
+                </div>
+            </div>
+            <div class="part">
+                <h3>Part 08 - 進階技巧與優化</h3>
+                <div class="units">
+                    <a href="Part_08_進階技巧與優化/Unit_01_效能優化/Part08_Unit01_效能優化.html" class="unit-link">效能優化</a>
+                    <a href="Part_08_進階技巧與優化/Unit_02_錯誤處理/Part08_Unit02_錯誤處理.html" class="unit-link">錯誤處理</a>
+                    <a href="Part_08_進階技巧與優化/Unit_03_流程整合/Part08_Unit03_流程整合.html" class="unit-link">流程整合</a>
+                </div>
+            </div>
+            <div class="part">
+                <h3>Part 09 - 疑難排解</h3>
+                <div class="units">
+                    <a href="Part_09_疑難排解/Unit_01_問題診斷/Part09_Unit01_問題診斷.html" class="unit-link">問題診斷</a>
+                    <a href="Part_09_疑難排解/Unit_02_環境設定/Part09_Unit02_環境設定.html" class="unit-link">環境設定</a>
+                    <a href="Part_09_疑難排解/Unit_03_AI協助除錯/Part09_Unit03_AI協助除錯.html" class="unit-link">AI協助除錯</a>
+                </div>
+            </div>
+            <div class="part">
+                <h3>Part 10 - 總結與延伸</h3>
+                <div class="units">
+                    <a href="Part_10_總結與延伸/Unit_01_課程總複習/Part10_Unit01_課程總複習.html" class="unit-link">課程總複習</a>
+                    <a href="Part_10_總結與延伸/Unit_02_進階學習資源/Part10_Unit02_進階學習資源.html" class="unit-link">進階學習資源</a>
+                    <a href="Part_10_總結與延伸/Unit_03_打造個人工作流/Part10_Unit03_打造個人工作流.html" class="unit-link">打造個人工作流</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><a href="https://www.facebook.com/?locale=zh_TW">Facebook</a> | <a href="https://www.youtube.com/@Liang-yt02">YouTube</a></p>
+        </div>
+    </div>
+</body>
+</html>

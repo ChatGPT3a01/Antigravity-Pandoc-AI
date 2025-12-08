@@ -4,7 +4,7 @@
 
 ## 🎯 立即開始
 
-### 👉 [點此開始觀看簡報](https://chatgpt3a01.github.io/Antigravity-Pandoc-AI/Part_01_%E8%AA%8D%E8%AD%98Antigravity/Unit_01_%E5%8A%9F%E8%83%BD%E7%B8%BD%E8%A6%BD/Part01_Unit01_%E5%8A%9F%E8%83%BD%E7%B8%BD%E8%A6%BD.html)
+### 👉 [點此開始觀看簡報](https://chatgpt3a01.github.io/Antigravity-Pandoc-AI/)
 
 ---
 
