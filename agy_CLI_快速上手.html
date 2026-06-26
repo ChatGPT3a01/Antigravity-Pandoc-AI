@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Antigravity CLI（agy）快速上手 | Antigravity 速速上手</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft JhengHei','Segoe UI',sans-serif;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);min-height:100vh;color:#1f2937;padding:78px 18px 48px}
+.topbar{position:fixed;top:0;left:0;right:0;height:58px;background:rgba(15,30,60,.92);backdrop-filter:blur(10px);display:flex;align-items:center;gap:16px;padding:0 22px;z-index:100;border-bottom:1px solid rgba(255,215,0,.35)}
+.topbar .back{color:#ffd700;text-decoration:none;font-weight:700;font-size:14px;border:1px solid rgba(255,215,0,.5);padding:6px 14px;border-radius:18px;transition:.25s}
+.topbar .back:hover{background:rgba(255,215,0,.18)}
+.topbar .tt{color:#fff;font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrap{max-width:920px;margin:0 auto}
+.doc{background:#fff;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.35);padding:40px 46px;border-top:6px solid #ffd700}
+.doc h1{color:#1e3c72;font-size:32px;margin:6px 0 18px;line-height:1.3}
+.doc h2{color:#1e3c72;font-size:25px;margin:30px 0 14px;padding-left:13px;border-left:5px solid #ffd700}
+.doc h3{color:#2a5298;font-size:20px;margin:20px 0 8px}
+.doc p,.doc li{font-size:17px;line-height:1.85;color:#374151;margin-bottom:7px}
+.doc ul,.doc ol{margin-left:24px;margin-bottom:8px}
+.doc strong{color:#1e3c72}
+.doc a{color:#2a5298;text-decoration:underline;word-break:break-all}
+.doc blockquote{border-left:5px solid #ffd700;background:#fffbea;padding:10px 16px;margin:12px 0;border-radius:0 10px 10px 0;color:#7c5e00}
+.doc code{background:#eef2ff;padding:2px 7px;border-radius:5px;font-family:Consolas,monospace;font-size:88%;color:#1e3c72;border:1px solid #c7d2fe}
+.doc pre{background:#0f1e3c;color:#cfe0ff;padding:16px 18px;border-radius:11px;font-size:14.5px;line-height:1.7;overflow-x:auto;margin:12px 0;border-left:4px solid #ffd700}
+.doc pre code{background:none;border:none;color:#cfe0ff;padding:0;font-size:14.5px}
+.doc table{width:100%;border-collapse:collapse;margin:14px 0;font-size:15px}
+.doc th{background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;padding:10px 12px;text-align:left}
+.doc td{padding:9px 12px;border-bottom:1px solid #dbe4f3;color:#374151}
+.doc tr:nth-child(even) td{background:#f4f7fd}
+.doc hr{border:none;border-top:1px solid #e5e7eb;margin:22px 0}
+.foot{text-align:center;color:rgba(255,255,255,.8);margin-top:26px;font-size:14px}
+.foot a{color:#ffd700}
+@media(max-width:640px){.doc{padding:24px 18px}.topbar .tt{font-size:13px}}
+</style>
+</head>
+<body>
+<div class="topbar"><a class="back" href="index.html">← 回課程首頁</a><span class="tt">⌨️ Antigravity CLI（agy）快速上手</span></div>
+<div class="wrap">
+<article class="doc">
+<h1>Antigravity CLI（<code>agy</code>）快速上手筆記</h1>
+<blockquote>
+<p>本筆記指令皆以本機 <code>agy --help</code> 實測為準（非網路文章），可放心照抄。
+撰寫：阿亮老師工作流 ｜ 對應版本：<strong>agy 1.0.12</strong></p>
+</blockquote>
+<hr />
+<h2>一、它是什麼</h2>
+<ul>
+<li><strong><code>agy</code></strong> 是 Google Antigravity 的終端機 AI Agent CLI，於 <strong>2026/6/18 取代 Gemini CLI</strong>。</li>
+<li>單一編譯執行檔，<strong>不需 Node / Python</strong>，一行指令安裝。</li>
+<li>跨平台：Windows / macOS / Linux。</li>
+</ul>
+<p>本機現況（已安裝）：
+- 路徑：<code>C:\Users\user\AppData\Local\agy\bin\agy.exe</code>
+- 版本：<code>1.0.12</code>
+- 驗證：<code>agy --version</code></p>
+<hr />
+<h2>二、安裝（重裝或別台機器用）</h2>
+<p><strong>Windows · PowerShell（建議）</strong></p>
+<pre><code class="language-powershell">irm https://antigravity.google/cli/install.ps1 | iex
+agy --version
+</code></pre>
+<p><strong>Windows · CMD</strong></p>
+<pre><code class="language-bat">curl -fsSL https://antigravity.google/cli/install.cmd -o install.cmd &amp;&amp; install.cmd &amp;&amp; del install.cmd
+</code></pre>
+<p><strong>macOS / Linux</strong></p>
+<pre><code class="language-bash">curl -fsSL https://antigravity.google/cli/install.sh | bash
+export PATH=&quot;$HOME/.local/bin:$PATH&quot;
+agy --version
+</code></pre>
+<hr />
+<h2>三、基本用法</h2>
+<table>
+<thead>
+<tr>
+<th>動作</th>
+<th>指令</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>啟動互動式對話（TUI）</td>
+<td><code>agy</code></td>
+</tr>
+<tr>
+<td>單次提問、印出結果就結束</td>
+<td><code>agy -p "幫我解釋這段程式"</code></td>
+</tr>
+<tr>
+<td>帶初始提示但繼續對話</td>
+<td><code>agy -i "先看看這個專案"</code></td>
+</tr>
+<tr>
+<td>接續上一段對話</td>
+<td><code>agy -c</code></td>
+</tr>
+<tr>
+<td>用 ID 恢復某段對話</td>
+<td><code>agy --conversation &lt;ID&gt;</code></td>
+</tr>
+<tr>
+<td>指定模型</td>
+<td><code>agy --model &lt;模型名&gt;</code></td>
+</tr>
+<tr>
+<td>把資料夾加入工作區（可重複）</td>
+<td><code>agy --add-dir ./src --add-dir ./docs</code></td>
+</tr>
+<tr>
+<td>開新專案 session</td>
+<td><code>agy --new-project</code></td>
+</tr>
+<tr>
+<td>指定專案</td>
+<td><code>agy --project &lt;專案ID&gt;</code></td>
+</tr>
+<tr>
+<td>在受限終端沙箱中執行</td>
+<td><code>agy --sandbox</code></td>
+</tr>
+<tr>
+<td>自動核可所有工具權限（⚠️ 危險）</td>
+<td><code>agy --dangerously-skip-permissions</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <code>--dangerously-skip-permissions</code> 會讓 Agent 不問你就執行所有工具/指令，僅在你信任的隔離環境用。</p>
+</blockquote>
+<hr />
+<h2>四、子指令</h2>
+<table>
+<thead>
+<tr>
+<th>子指令</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agy models</code></td>
+<td>列出可用模型</td>
+</tr>
+<tr>
+<td><code>agy plugin</code>（別名 <code>plugins</code>）</td>
+<td>管理外掛（見下節）</td>
+</tr>
+<tr>
+<td><code>agy update</code></td>
+<td>更新 CLI 到最新版</td>
+</tr>
+<tr>
+<td><code>agy changelog</code></td>
+<td>看更新日誌 / 版本說明</td>
+</tr>
+<tr>
+<td><code>agy install</code></td>
+<td>設定環境路徑與 shell 設定</td>
+</tr>
+<tr>
+<td><code>agy help</code></td>
+<td>看各子指令說明</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>五、從 Gemini CLI（或 Claude）遷移 ★</h2>
+<p><code>agy</code> 內建匯入，把舊的外掛/設定直接接過來：</p>
+<pre><code class="language-bash"># 從 Gemini CLI 匯入
+agy plugin import gemini
+
+# （也支援從 Claude 匯入）
+agy plugin import claude
+
+# 確認匯入結果
+agy plugin list
+</code></pre>
+<p>外掛管理其他常用指令：</p>
+<pre><code class="language-bash">agy plugin install &lt;name@marketplace&gt;   # 安裝外掛
+agy plugin enable  &lt;name&gt;               # 啟用
+agy plugin disable &lt;name&gt;               # 停用
+agy plugin uninstall &lt;name&gt;             # 移除
+agy plugin validate &lt;path&gt;              # 驗證外掛
+</code></pre>
+<blockquote>
+<p>📌 注意：網路上有文章寫 <code>agy inspect</code>、<code>agy config --edit</code> —— <strong>這兩個指令不存在</strong>，請以本筆記為準。</p>
+</blockquote>
+<hr />
+<h2>六、更新與維護</h2>
+<pre><code class="language-bash">agy update        # 更新到最新版
+agy --version     # 確認版本
+agy changelog     # 看這版改了什麼
+</code></pre>
+<hr />
+<h2>七、官方連結</h2>
+<ul>
+<li>安裝文件：https://antigravity.google/docs/cli-install</li>
+<li>快速上手：https://antigravity.google/docs/cli-getting-started</li>
+<li>GitHub：https://github.com/google-antigravity/antigravity-cli</li>
+<li>官方 Codelab 教學：https://codelabs.developers.google.com/antigravity-cli-hands-on</li>
+</ul>
+</article>
+<div class="foot">📘 《Google Antigravity 速速上手》延伸番外篇　·　阿亮老師　|　<a href="https://www.youtube.com/@Liang-yt02">YouTube</a></div>
+</div>
+</body>
+</html>
